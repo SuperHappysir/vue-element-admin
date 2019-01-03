@@ -2,6 +2,7 @@ import axios from 'axios'
 import store from '@/store'
 import { getToken } from '@/utils/authToken'
 import { Message, MessageBox } from 'element-ui'
+import router from '@/router'
 
 // create an axios instance
 const service = axios.create({
@@ -30,16 +31,17 @@ service.interceptors.response.use(
   response => {
     const res = response.data
     if (res.code === '200') {
-      return response.data
+      return response
     }
-    if (res.code === '401') {
+    if (res.code === '401' && res.message === '无权操作') {
       MessageBox.confirm('你的请求未授权，您可以取消继续留在该页面，或者重新登录', '确定登出', {
         confirmButtonText: '重新登录',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         store.dispatch('FedLogOut').then(() => {
-          location.reload()
+          router.push('/login')
+          // location.reload()
         })
       })
     } else {

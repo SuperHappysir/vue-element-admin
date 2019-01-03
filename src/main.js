@@ -18,7 +18,7 @@ import * as filters from './filters'
 import './permission'
 
 // 模拟API
-import './mock'
+// import './mock'
 
 Vue.use(Element, {
   size: 'medium',

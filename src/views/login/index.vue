@@ -115,6 +115,7 @@ export default {
           return this.$store.dispatch('GetUserInfo')
         })
           .then(() => {
+            console.log('1')
             // 初始化用户权限
             getRolePermissions(1).then(response => {
               return this.$store.dispatch('setUserPermission', response.data.permission_list)
