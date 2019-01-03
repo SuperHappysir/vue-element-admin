@@ -55,7 +55,7 @@
 import { isvalidUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
 import SocialSign from './socialsignin'
-import { getRolePermissions } from '@/api/rbac'
+import { getUserPermissions } from '@/api/rbac'
 // import router from '@/router'
 
 export default {
@@ -114,11 +114,11 @@ export default {
         this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
           return this.$store.dispatch('GetUserInfo')
         })
-          .then(() => {
-            console.log('1')
+          .then((resp) => {
             // 初始化用户权限
-            getRolePermissions(1).then(response => {
-              return this.$store.dispatch('setUserPermission', response.data.permission_list)
+            getUserPermissions(resp.data.payload.id).then(response => {
+              console.log(response)
+              return this.$store.dispatch('setUserPermission', response.data.payload.permission_list)
             })
             // 初始化vue异步route
               .then(() => {

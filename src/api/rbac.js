@@ -16,6 +16,10 @@ export function assignRolePermissions(roleid, permissionList) {
   return request.post(`/api/roles/${roleid}/permission`, { 'permissionList': permissionList })
 }
 
+export function getUserPermissions(userid) {
+  return request.get(`/api/admin/${userid}/permission`)
+}
+
 export function getRolePermissions(roleid) {
   return request.get(`/api/roles/${roleid}/permission`)
 }
