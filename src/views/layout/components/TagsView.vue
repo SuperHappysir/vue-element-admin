@@ -2,21 +2,18 @@
   <div class="tags-view-container">
     <scroll-pane ref="scrollPane" class="tags-view-wrapper">
       <router-link
-        v-for="tag in visitedViews"
+        v-for="tag in Array.from(visitedViews)"
         ref="tag"
         :class="isActive(tag)?'active':''"
-        :to="{ path: tag.path, query: tag.query, fullPath: tag.fullPath }"
+        :to="tag"
         :key="tag.path"
-        tag="span"
         class="tags-view-item"
-        @click.middle.native="closeSelectedTag(tag)"
         @contextmenu.prevent.native="openMenu(tag,$event)">
         {{ generateTitle(tag.title) }}
-        <span class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)" />
+        <span class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)"/>
       </router-link>
     </scroll-pane>
     <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
-      <li @click="refreshSelectedTag(selectedTag)">{{ $t('tagsView.refresh') }}</li>
       <li @click="closeSelectedTag(selectedTag)">{{ $t('tagsView.close') }}</li>
       <li @click="closeOthersTags">{{ $t('tagsView.closeOthers') }}</li>
       <li @click="closeAllTags">{{ $t('tagsView.closeAll') }}</li>
@@ -61,47 +58,37 @@ export default {
   },
   methods: {
     generateTitle, // generateTitle by vue-i18n
+    generateRoute() {
+      if (this.$route.name) {
+        return this.$route
+      }
+      return false
+    },
     isActive(route) {
       return route.path === this.$route.path
     },
     addViewTags() {
-      const { name } = this.$route
-      if (name) {
-        this.$store.dispatch('addView', this.$route)
+      const route = this.generateRoute()
+      if (!route) {
+        return false
       }
-      return false
+      this.$store.dispatch('addVisitedViews', route)
     },
     moveToCurrentTag() {
       const tags = this.$refs.tag
       this.$nextTick(() => {
         for (const tag of tags) {
           if (tag.to.path === this.$route.path) {
-            this.$refs.scrollPane.moveToTarget(tag)
-
-            // when query is different then update
-            if (tag.to.fullPath !== this.$route.fullPath) {
-              this.$store.dispatch('updateVisitedView', this.$route)
-            }
-
+            this.$refs.scrollPane.moveToTarget(tag.$el)
             break
           }
         }
       })
     },
-    refreshSelectedTag(view) {
-      this.$store.dispatch('delCachedView', view).then(() => {
-        const { fullPath } = view
-        this.$nextTick(() => {
-          this.$router.replace({
-            path: '/redirect' + fullPath
-          })
-        })
-      })
-    },
     closeSelectedTag(view) {
-      this.$store.dispatch('delView', view).then(({ visitedViews }) => {
+      this.$store.dispatch('delVisitedViews', view).then((views) => {
         if (this.isActive(view)) {
-          const latestView = visitedViews.slice(-1)[0]
+          const latestView = views.slice(-1)[0]
           if (latestView) {
             this.$router.push(latestView)
           } else {
@@ -121,21 +108,11 @@ export default {
       this.$router.push('/')
     },
     openMenu(tag, e) {
-      const menuMinWidth = 105
-      const offsetLeft = this.$el.getBoundingClientRect().left // container margin left
-      const offsetWidth = this.$el.offsetWidth // container width
-      const maxLeft = offsetWidth - menuMinWidth // left boundary
-      const left = e.clientX - offsetLeft + 15 // 15: margin right
-
-      if (left > maxLeft) {
-        this.left = maxLeft
-      } else {
-        this.left = left
-      }
-      this.top = e.clientY
-
       this.visible = true
       this.selectedTag = tag
+      const offsetLeft = this.$el.getBoundingClientRect().left // container margin left
+      this.left = e.clientX - offsetLeft + 15 // 15: margin right
+      this.top = e.clientY
     },
     closeMenu() {
       this.visible = false
@@ -146,16 +123,14 @@ export default {
 
 <style rel="stylesheet/scss" lang="scss" scoped>
 .tags-view-container {
-  height: 34px;
-  width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #d8dce5;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
   .tags-view-wrapper {
+    background: #fff;
+    height: 34px;
+    border-bottom: 1px solid #d8dce5;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .12), 0 0 3px 0 rgba(0, 0, 0, .04);
     .tags-view-item {
       display: inline-block;
       position: relative;
-      cursor: pointer;
       height: 26px;
       line-height: 26px;
       border: 1px solid #d8dce5;
@@ -167,9 +142,6 @@ export default {
       margin-top: 4px;
       &:first-of-type {
         margin-left: 15px;
-      }
-      &:last-of-type {
-        margin-right: 15px;
       }
       &.active {
         background-color: #42b983;

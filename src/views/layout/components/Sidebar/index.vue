@@ -9,7 +9,7 @@
       text-color="#bfcbd9"
       active-text-color="#409EFF"
     >
-      <sidebar-item v-for="route in permission_routers" :key="route.path" :item="route" :base-path="route.path"/>
+      <sidebar-item v-for="route in permission_routers" v-if="hasPermission(route)" :key="route.name" :item="route" :base-path="route.path"/>
     </el-menu>
   </el-scrollbar>
 </template>
@@ -27,6 +27,11 @@ export default {
     ]),
     isCollapse() {
       return !this.sidebar.opened
+    }
+  },
+  methods: {
+    hasPermission(route) {
+      return typeof route.hasAuth === 'undefined' || route.hasAuth
     }
   }
 }

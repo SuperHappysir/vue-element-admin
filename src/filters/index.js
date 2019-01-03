@@ -37,6 +37,15 @@ export function numberFormatter(num, digits) {
   return num.toString()
 }
 
-export function toThousandFilter(num) {
+export function toThousandslsFilter(num) {
   return (+num || 0).toString().replace(/^-?\d+/g, m => m.replace(/(?=(?!\b)(\d{3})+$)/g, ','))
+}
+
+export function enableStatusName(enable) {
+  const nameMap = {
+    0: '待启用',
+    1: '启用',
+    2: '禁用'
+  }
+  return nameMap[enable] ? nameMap[enable] : '未知'
 }
