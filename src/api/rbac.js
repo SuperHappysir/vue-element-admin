@@ -45,11 +45,11 @@ export function updateRole(id, param) {
 }
 
 export function batchDestoryRole(ids) {
-  return request.post(`/api/roles/batchDestory`, { params: { ids }})
+  return request.post(`/api/roles/_bulk/batchDisabled`, { params: { ids }})
 }
 
 export function batchEnableRole(ids) {
-  return request.post(`/api/roles/batchEnable`, { params: { ids }})
+  return request.post(`/api/roles/_bulk/batchEnable`, { params: { ids }})
 }
 
 export function getRole(id) {

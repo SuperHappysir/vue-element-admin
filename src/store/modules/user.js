@@ -50,7 +50,7 @@ const user = {
   actions: {
     setUserPermission({ commit }, permission) {
       return new Promise(resolve => {
-        commit('SET_USER_PERMISSION', permission.filter((item) => { return !!item }))
+        commit('SET_USER_PERMISSION', permission.filter((item) => { return !!item && parseInt(item.per_type) !== 1 }))
         resolve()
       })
     },

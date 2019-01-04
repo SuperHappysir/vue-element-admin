@@ -231,7 +231,7 @@ export default {
         this.$message.error('请选择操作对象')
         return
       }
-      batchDestoryRole(this.temp).then((response) => {
+      batchDestoryRole(this.temp.split(',')).then((response) => {
         this.getList()
         this.$message({
           message: '禁用成功',
@@ -245,7 +245,7 @@ export default {
         this.$message.error('请选择操作对象')
         return
       }
-      batchEnableRole(this.temp).then((response) => {
+      batchEnableRole(this.temp.split(',')).then((response) => {
         this.getList()
         this.$message({
           message: '启用成功',

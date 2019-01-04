@@ -29,7 +29,8 @@ Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])
 })
 
-Vue.config.productionTip = true
+// 根据环境自动开启vue-devtool
+Vue.config.productionTip = process.env.NODE_ENV === 'production'
 
 new Vue({
   el: '#app',
