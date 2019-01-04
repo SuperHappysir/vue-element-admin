@@ -5,6 +5,9 @@ import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 import Element from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
+import Avue from '@smallwei/avue'
+import '@smallwei/avue/lib/theme-chalk/index.css'
+
 import '@/styles/index.scss'
 
 import App from './App'
@@ -24,6 +27,8 @@ Vue.use(Element, {
   size: 'medium',
   i18n: (key, value) => i18n.t(key, value)
 })
+
+Vue.use(Avue, {})
 
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])

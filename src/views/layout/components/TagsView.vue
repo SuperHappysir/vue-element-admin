@@ -72,7 +72,8 @@ export default {
       if (!route) {
         return false
       }
-      this.$store.dispatch('addVisitedViews', route)
+      // todo 代码好像丢了
+      // this.$store.dispatch('addVisitedViews', route)
     },
     moveToCurrentTag() {
       const tags = this.$refs.tag

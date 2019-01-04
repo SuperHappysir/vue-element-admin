@@ -44,7 +44,7 @@ export default [
     path: '/upload',
     component: Layout,
     redirect: '/upload/demo',
-    name: 'Example',
+    name: 'upload',
     meta: {
       title: 'upload',
       icon: 'example'

@@ -55,7 +55,7 @@
 import { isvalidUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
 import SocialSign from './socialsignin'
-import { getUserPermissions } from '@/api/rbac'
+import { Message } from 'element-ui'
 // import router from '@/router'
 
 export default {
@@ -90,12 +90,6 @@ export default {
       showDialog: false
     }
   },
-  created() {
-    // window.addEventListener('hashchange', this.afterQRScan)
-  },
-  destroyed() {
-    // window.removeEventListener('hashchange', this.afterQRScan)
-  },
   methods: {
     showPwd() {
       if (this.passwordType === 'password') {
@@ -111,47 +105,22 @@ export default {
           return false
         }
         this.loading = true
-        this.$store.dispatch('LoginByUsername', this.loginForm).then(() => {
-          return this.$store.dispatch('GetUserInfo')
-        })
-          .then((resp) => {
-            // 初始化用户权限
-            getUserPermissions(resp.data.payload.id).then(response => {
-              console.log(response)
-              return this.$store.dispatch('setUserPermission', response.data.payload.permission_list)
-            })
-            // 初始化vue异步route
-              .then(() => {
-                console.log(this.$store.getters.addRouters)
-                // router.addRoutes(this.$store.getters.addRouters) // 动态添加可访问路由表
-              })
-            // 结束
-              .then(() => {
-                this.loading = false
-                this.$router.push({ path: '/' })
-              })
+        this.$store.dispatch('LoginByUsername', this.loginForm)
+          .then(() => {
+            return this.$store.dispatch('GetUserInfo')
+          })
+          .then(() => {
+            this.loading = false
+            this.$router.push({ path: '/' })
           }).catch(() => {
+            Message({
+              message: '登录失败',
+              type: 'error',
+              duration: 5 * 1000
+            })
             this.loading = false
           })
       })
-    },
-    afterQRScan() {
-      // const hash = window.location.hash.slice(1)
-      // const hashObj = getQueryObject(hash)
-      // const originUrl = window.location.origin
-      // history.replaceState({}, '', originUrl)
-      // const codeMap = {
-      //   wechat: 'code',
-      //   tencent: 'code'
-      // }
-      // const codeName = hashObj[codeMap[this.auth_type]]
-      // if (!codeName) {
-      //   alert('第三方登录失败')
-      // } else {
-      //   this.$store.dispatch('LoginByThirdparty', codeName).then(() => {
-      //     this.$router.push({ path: '/' })
-      //   })
-      // }
     }
   }
 }

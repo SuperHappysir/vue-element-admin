@@ -29,7 +29,9 @@
               <el-tag v-if="data.per_type === 2" class="mgl-10" type="success" size="mini">菜</el-tag>
               <el-tag v-else-if="data.per_type === 3" class="mgl-10" type="success" size="mini">钮</el-tag>
             </el-tooltip>
-            <el-tag v-if="syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">未同步</el-tag>
+            <el-tooltip content="权限还未同步到后端服务器" placement="top">
+              <el-tag v-if="syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
+            </el-tooltip>
           </span>
           <span class="mgl-10">
             <el-button v-if="data.per_type === 2" type="text" size="mini" icon="el-icon-plus" @click="showdialog('add', node, 'BUTTON')"/>
@@ -45,12 +47,13 @@
 <script>
 import { generateTitle } from '@/utils/i18n'
 import { asyncRouterMap } from '@/router'
-import { SyncMenuPermissionData, getMenuPermissionData, assignRolePermissions, getButtons, deletePermission } from '@/api/rbac'
+import { SyncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
 import { initializePermission } from '@/utils/permission'
 import path from 'path'
 import debounce from 'lodash/debounce'
 import PermissionAdd from './add'
 import { getRolePermissions } from '@/api/rbac'
+import { transferRoutePermission, permissionTreeToList } from '@/utils/permission'
 export default {
   name: 'Permission',
   components: { PermissionAdd },
@@ -113,15 +116,12 @@ export default {
   methods: {
     async init() {
       this.loading = true
-      let response = await getButtons()
-      this.buttonMap = response.data || {}
 
-      response = await getMenuPermissionData()
-      this.syncMenu = response.data || []
-
-      getRolePermissions(this.businessId).then(response => {
-        this.permission = response.data.permission_list
-      })
+      const response = await getMenuPermissionData({ limit: 10000 })
+      this.permission = response.data.payload.paginate.items || []
+      if (this.permission.length > 0) {
+        this.syncMenu = this.permission.filter((item) => item.per_type !== 1).map((item) => item.path)
+      }
 
       this.generateMenuTree()
 
@@ -188,10 +188,19 @@ export default {
     },
     // 同步路由到后端
     async SyncMenuPermissionData() {
-      await SyncMenuPermissionData({ 'menus': this.menuTree })
+      // 将前端权限钻换成后端对应的格式
+      const menuTree = transferRoutePermission(
+        // 建树型权限转成列表
+        permissionTreeToList(this.menuTree)
+      )
 
-      const response = await getMenuPermissionData()
-      this.syncMenu = response.data || []
+      await SyncMenuPermissionData({ 'permissions': menuTree })
+
+      const response = await getMenuPermissionData({ limit: 10000 })
+      this.permission = response.data.payload.paginate.items || []
+      if (this.permission.length > 0) {
+        this.syncMenu = this.permission.map((item) => item.path)
+      }
 
       this.$message({
         message: '恭喜你，同步成功',

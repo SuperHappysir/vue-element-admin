@@ -1,41 +1,49 @@
 <template>
   <div class="components-container">
-    <el-button type="primary" icon="upload" @click="imagecropperShow=true">上传Demo</el-button>
-
-    <image-cropper
-      v-show="imagecropperShow"
-      :width="300"
-      :height="300"
-      :key="imagecropperKey"
-      url="http://admin.base.com/upload"
-      lang-type="en"
-      @close="close"
-      @crop-upload-success="cropSuccess"/>
+    <avue-crud ref="crud" :data="data" :option="option4" @selection-change="selectionChange"/>
+    <div style="margin-top: 20px">
+      <el-button @click="toggleSelection([data[1]])">选中第二行</el-button>
+      <el-button @click="toggleSelection()">取消选择</el-button>
+    </div>
   </div>
 </template>
 
 <script>
-import ImageCropper from '@/components/ImageCropper'
-import PanThumb from '@/components/PanThumb'
-
 export default {
-  name: 'AvatarUploadDemo',
-  components: { ImageCropper, PanThumb },
   data() {
     return {
-      imagecropperShow: false,
-      imagecropperKey: 0,
-      image: 'https://wpimg.wallstcn.com/577965b9-bb9e-4e02-9f0c-095b41417191'
+      data: [
+        {
+          name: '张三',
+          sex: '男'
+        }, {
+          name: '李四',
+          sex: '女'
+        }
+      ],
+      option4: {
+        selection: true,
+        page: false,
+        align: 'center',
+        menuAlign: 'center',
+        column: [
+          {
+            label: '姓名',
+            prop: 'name'
+          }, {
+            label: '性别',
+            prop: 'sex'
+          }
+        ]
+      }
     }
   },
   methods: {
-    cropSuccess(resData) {
-      this.imagecropperShow = false
-      this.imagecropperKey = this.imagecropperKey + 1
-      this.image = resData.files.avatar
+    selectionChange(list) {
+      this.$message.success('选中的数据' + JSON.stringify(list))
     },
-    close() {
-      this.imagecropperShow = false
+    toggleSelection(val) {
+      this.$refs.crud.toggleSelection(val)
     }
   }
 }

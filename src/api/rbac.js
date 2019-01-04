@@ -1,11 +1,11 @@
 import request from '@/utils/request'
 
 export function SyncMenuPermissionData(params) {
-  return request.post('/api/permission', params)
+  return request.post('/api/permission/frontend/path', params)
 }
 
-export function getMenuPermissionData() {
-  return request.get('/api/permission')
+export function getMenuPermissionData(params) {
+  return request.get('/api/permission', { params: params })
 }
 
 export function deletePermission(id) {
