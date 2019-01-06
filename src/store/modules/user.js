@@ -1,4 +1,4 @@
-import { loginByUsername, logout, getUserInfo } from '@/api/login'
+import { loginByUsername, logout, getUserInfo, refreshToken } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/authToken'
 
 const user = {
@@ -50,6 +50,35 @@ const user = {
         }).catch(error => {
           reject(error)
         })
+      })
+    },
+
+    // 刷新登陆token
+    refreshToken({ commit }) {
+      return new Promise((resolve, reject) => {
+        refreshToken()
+          .then(resp => {
+            const data = resp.data
+            data.payload.expired = Math.ceil(new Date().getTime() / 1000) + data.payload.expires_in
+            commit('SET_TOKEN', data.payload)
+            setToken(data.payload)
+            resolve(data)
+          })
+          .then(() => {
+            return this.$store.dispatch('GetUserInfo')
+          })
+          .catch(error => {
+            reject(error)
+          })
+      })
+    },
+
+    // 用户名登录
+    clearToken({ commit }) {
+      return new Promise((resolve) => {
+        commit('SET_TOKEN', {})
+        setToken({})
+        resolve()
       })
     },
 

@@ -21,7 +21,7 @@ export function refreshToken() {
 
 export function logout() {
   return request({
-    url: '/login/logout',
+    url: '/api/admin/auth/logout',
     method: 'post'
   })
 }

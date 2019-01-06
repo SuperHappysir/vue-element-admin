@@ -23,14 +23,29 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  if (!getToken()) {
+  const token = getToken()
+  if (!token) {
     next(`/login?redirect=${to.path}`)
     NProgress.done()
     return
+  } else if (token.expired < Math.ceil(new Date().getTime() / 1000)) {
+    store.dispatch('refreshToken')
+      .then(() => {
+        next({ ...to, replace: true })
+      })
+      .catch(() => {
+        store.dispatch('clearToken').then(() => {
+          next({ ...to, replace: true })
+          NProgress.done()
+        })
+      })
+    return
   }
 
-  if (!store.getters.permission ||
-       store.getters.permission.length < 1 ||
+  console.log(store.getters.permission)
+  console.log(store.getters.permission.length < 1)
+  console.log(store.getters.addRouters.length < 1)
+  if (store.getters.permission.length < 1 ||
        store.getters.addRouters.length < 1) {
     // 根据登录信息拉取权限信息
     initializePermission(1).then((addRouters) => {

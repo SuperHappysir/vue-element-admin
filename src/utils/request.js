@@ -7,17 +7,15 @@ import router from '@/router'
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.BASE_API,
-  timeout: 10000
+  timeout: 5000
 })
 
 // request interceptor
 service.interceptors.request.use(
   config => {
-    if (store.getters.token) {
-      const tokenObject = getToken()
-      if (tokenObject && tokenObject.expired > Math.ceil(new Date().getTime() / 1000)) {
-        config.headers['Authorization'] = `Bearer ${tokenObject.access_token}`
-      }
+    const tokenObject = store.getters.token || getToken()
+    if (tokenObject) {
+      config.headers['Authorization'] = `Bearer ${tokenObject.access_token}`
     }
     return config
   },
