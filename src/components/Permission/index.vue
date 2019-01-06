@@ -26,16 +26,16 @@
           <span class="mgl-10">
             {{ data.title }}
             <el-tooltip content="菜:指代菜单,钮:指代按钮" placement="top">
-              <el-tag v-if="data.per_type === 2" class="mgl-10" type="success" size="mini">菜</el-tag>
-              <el-tag v-else-if="data.per_type === 3" class="mgl-10" type="success" size="mini">钮</el-tag>
+              <el-tag v-if="data.permission_type === 2" class="mgl-10" type="success" size="mini">菜</el-tag>
+              <el-tag v-else-if="data.permission_type === 3" class="mgl-10" type="success" size="mini">钮</el-tag>
             </el-tooltip>
             <el-tooltip content="权限还未同步到后端服务器" placement="top">
               <el-tag v-if="syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
             </el-tooltip>
           </span>
           <span class="mgl-10">
-            <el-button v-if="data.per_type === 2" type="text" size="mini" icon="el-icon-plus" @click="showdialog('add', node, 'BUTTON')"/>
-            <el-button v-if="data.per_type === 3 && syncMenu.indexOf(data.absolute_path) !== -1" class="delete-btn" type="text" size="mini" icon="el-icon-delete" @click="deletePermission(node)"/>
+            <el-button v-if="data.permission_type === 2" type="text" size="mini" icon="el-icon-plus" @click="showdialog('add', node, 'BUTTON')"/>
+            <el-button v-if="data.permission_type === 3 && syncMenu.indexOf(data.absolute_path) !== -1" class="delete-btn" type="text" size="mini" icon="el-icon-delete" @click="deletePermission(node)"/>
           </span>
         </span>
       </el-tree>
@@ -78,10 +78,12 @@ export default {
         label: 'title',
         children: 'children'
       },
-      //  已同步的信息
+      // 已同步的信息
       syncMenu: [],
-      //  按父级分组的按钮字典
+      // 按父级分组的按钮字典
       buttonMap: [],
+      // path为key 权限ID为value的对象
+      permissionPathWithIdMap: {},
       permission: [],
       filterMenuPermText: '',
       dialog: {
@@ -101,7 +103,7 @@ export default {
     businessId: function(value) {
       this.loading = true
       getRolePermissions(value).then(response => {
-        this.permission = response.data.permission_list
+        this.permission = response.data.payload.permission_list.map((item) => item.path)
         this.loading = false
       })
     },
@@ -117,12 +119,24 @@ export default {
     async init() {
       this.loading = true
 
+      // 获取所有权限，用于判断权限是否全部同步到后端
       const response = await getMenuPermissionData({ limit: 10000 })
       this.permission = response.data.payload.paginate.items || []
       if (this.permission.length > 0) {
-        this.syncMenu = this.permission.filter((item) => item.per_type !== 1).map((item) => item.path)
+        const filterArr = this.permission.filter((item) => item.permission_type !== 1)
+        this.syncMenu = filterArr.map((item) => item.path)
+
+        filterArr.forEach((item) => {
+          this.permissionPathWithIdMap[item.path] = item.id
+        })
       }
 
+      // 初始化用户权限
+      getRolePermissions(this.businessId).then(response => {
+        this.permission = response.data.payload.permission_list.map((item) => item.path)
+      })
+
+      // 生成权限树形结构
       this.generateMenuTree()
 
       this.loading = false
@@ -144,7 +158,7 @@ export default {
         'absolute_path': '/',
         'name': '根对象',
         'title': '根对象',
-        'per_type': 2,
+        'permission_type': 2,
         'children': this.getChildren(asyncRouterMap, { 'path': '/' }).filter(item => {
           return item.path !== '*' || item.alwaysShow
         })
@@ -159,7 +173,7 @@ export default {
         const newChilden = {
           'path': childenItem.path,
           'absolute_path': path.join('/', parentNode.path, childenItem.path),
-          'per_type': 2,
+          'permission_type': 2,
           'name': typeof childenItem.name !== undefined ? childenItem.name : '',
           'title': (childenItem.meta && childenItem.meta.title) ? this.generateTitle(childenItem.meta.title) : ''
         }
@@ -177,7 +191,7 @@ export default {
               'path': tempButton.path,
               'id': tempButton.id,
               'absolute_path': tempButton.path,
-              'per_type': 3,
+              'permission_type': 3,
               'name': tempButton.name,
               'title': tempButton.name
             })
@@ -199,7 +213,12 @@ export default {
       const response = await getMenuPermissionData({ limit: 10000 })
       this.permission = response.data.payload.paginate.items || []
       if (this.permission.length > 0) {
-        this.syncMenu = this.permission.map((item) => item.path)
+        const filterArr = this.permission.filter((item) => item.permission_type !== 1)
+        this.syncMenu = filterArr.map((item) => item.path)
+
+        filterArr.forEach((item) => {
+          this.permissionPathWithIdMap[item.path] = item.id
+        })
       }
 
       this.$message({
@@ -209,13 +228,17 @@ export default {
     },
     // 分配权限
     assignPermissions() {
-      let checkedMenus = this.$refs.menuPermTreeRef.getCheckedNodes()
-      checkedMenus = checkedMenus.map((item) => {
-        return item.absolute_path
+      const checkedMenus = this.$refs.menuPermTreeRef.getCheckedNodes()
+      const permissionArr = []
+      checkedMenus.forEach((item) => {
+        const permissionId = this.permissionPathWithIdMap[item.absolute_path]
+        if (permissionId) {
+          permissionArr.push(permissionId)
+        }
       })
       if (this.businessType === 1) {
-        assignRolePermissions(this.businessId, checkedMenus).then((result) => {
-          return initializePermission(this.businessId)
+        assignRolePermissions(this.businessId, permissionArr).then((result) => {
+          return initializePermission(1)
         }).then((response) => {
           this.$message({
             message: '权限分配成功',

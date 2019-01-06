@@ -9,7 +9,7 @@ import getters from './getters'
 
 Vue.use(Vuex)
 
-const store = new Vuex.Store({
+export default new Vuex.Store({
   modules: {
     app,
     errorLog,
@@ -19,5 +19,3 @@ const store = new Vuex.Store({
   },
   getters
 })
-
-export default store

@@ -15,7 +15,7 @@ const permission = {
     GenerateRoutes({ commit }, addRouters) {
       return new Promise(resolve => {
         commit('SET_ROUTERS', addRouters)
-        resolve()
+        resolve(addRouters)
       })
     }
   }

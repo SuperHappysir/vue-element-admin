@@ -6,7 +6,8 @@ const user = {
     name: '',
     token: getToken(),
     avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-    permission: []
+    permission: [],
+    permissionPath: []
   },
 
   mutations: {
@@ -18,14 +19,17 @@ const user = {
     },
     SET_USER_PERMISSION: (state, permission) => {
       state.permission = permission
+      state.permissionPath = permission.map((item) => item.path)
     }
   },
 
   actions: {
     setUserPermission({ commit }, permission) {
       return new Promise(resolve => {
-        commit('SET_USER_PERMISSION', permission.filter((item) => { return !!item && parseInt(item.per_type) !== 1 }))
-        resolve()
+        commit('SET_USER_PERMISSION', permission.filter(item => {
+          return !!item && parseInt(item.permission_type) !== 1
+        }))
+        resolve(permission)
       })
     },
 

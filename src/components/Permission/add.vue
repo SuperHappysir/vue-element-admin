@@ -12,8 +12,8 @@
       <el-form-item label="父级权限值" prop="absolute_path">
         <el-input :value="currentNode.parent.data.absolute_path" :readonly="true"/>
       </el-form-item>
-      <el-form-item label="权限类型" prop="per_type">
-        <el-select v-model="temp.per_type" :disabled="true">
+      <el-form-item label="权限类型" prop="permission_type">
+        <el-select v-model="temp.permission_type" :disabled="true">
           <el-option
             v-for="item in permType"
             :key="item.code"
@@ -85,12 +85,12 @@ export default {
       },
       temp: {
         name: this.dialogType === constDialogType.ADD ? '' : this.currentNode.data.name,
-        per_type: permType[this.businessType].code,
+        permission_type: permType[this.businessType].code,
         path: this.dialogType === constDialogType.ADD ? '' : this.currentNode.data.absolute_path
       },
       rules: {
         name: [{ required: true, message: '必填', trigger: 'blur' }],
-        per_type: [{ required: true, message: '必填', trigger: 'blur' }],
+        permission_type: [{ required: true, message: '必填', trigger: 'blur' }],
         path: [{ required: true, message: '必填', trigger: 'change' }]
       }
     }

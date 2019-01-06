@@ -13,7 +13,7 @@ export function deletePermission(id) {
 }
 
 export function assignRolePermissions(roleid, permissionList) {
-  return request.post(`/api/roles/${roleid}/permission`, { 'permissionList': permissionList })
+  return request.post(`/api/roles/${roleid}/permission`, { 'permission_list': permissionList })
 }
 
 export function getUserPermissions(userid) {

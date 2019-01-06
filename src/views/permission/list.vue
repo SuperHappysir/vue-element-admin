@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row :gutter="20">
       <el-col :span="10">
-        <permission :business-type="1" :business-id="1"/>
+        <permission :business-type="1" :business-id="2"/>
       </el-col>
     </el-row>
 

@@ -4,25 +4,6 @@ import { asyncRouterMap, constantRouterMap } from '@/router'
 import path from 'path'
 
 /**
- * @param {Array} value
- * @returns {Boolean}
- * @example see @/views/permission/directive.vue
- */
-export default function checkPermission(value) {
-  if (value && value instanceof Array && value.length > 0) {
-    const roles = store.getters && store.getters.roles
-    const permissionRoles = value
-
-    return roles.some(role => {
-      return permissionRoles.includes(role)
-    })
-  } else {
-    console.error(`need roles! Like v-permission="['admin','editor']"`)
-    return false
-  }
-}
-
-/**
  * 菜单权限树转换成列表形式
  * @param tree
  */
@@ -43,7 +24,7 @@ export function permissionTreeToList(tree) {
 /**
  * 转换菜单权限路由为后端格式
  * @param {array} menuList 前端路由列表
- * @returns {{path: (*|string), name: *, description: *, per_type: number}[]}
+ * @returns {{path: (*|string), name: *, description: *, permission_type: number}[]}
  */
 export function transferRoutePermission(menuList) {
   return menuList.map((item) => {
@@ -51,7 +32,7 @@ export function transferRoutePermission(menuList) {
       'path': item.absolute_path,
       'name': item.name,
       'description': item.title,
-      'per_type': 2
+      'permission_type': 2
     }
   })
 }
@@ -60,29 +41,24 @@ export function transferRoutePermission(menuList) {
 export function initializePermission(userid) {
   return getUserPermissions(userid)
     .then(response => {
-      // 初始化用户权限
-      const permissionList = response.data.payload.permission_list || []
-
-      console.log(permissionList)
-      console.log(constantRouterMap)
-      // 公用权限
-      const items = permissionTreeToList(constantRouterMap)
-      store.dispatch('setUserPermission', permissionList.concat(items))
-      return permissionList
+      return response.data.payload.permission_list || []
     })
-    .then((permissionList) => {
+    // 设置用戶权限
+    .then(permissionList => {
+      const items = permissionTreeToList(constantRouterMap)
+      return store.dispatch('setUserPermission', permissionList.concat(items))
+    })
+    // 初始化用戶可見的menu
+    .then(permissionList => {
       permissionList = permissionList.map((item) => item.path)
-      // 初始化路由
       const addRouters = markNoAuthRouter(asyncRouterMap, permissionList)
-      store.dispatch('GenerateRoutes', addRouters)
-      return addRouters
+      return store.dispatch('GenerateRoutes', addRouters)
     })
 }
 
 // 判断是否有访问权限
 export function hasPermission(toPath) {
-  return true
-  // return store.getters.permission.indexOf(toPath) >= 0
+  return store.getters.permission_path.indexOf(toPath) >= 0
 }
 
 // 递归标记拥有的路由访问权限
@@ -93,8 +69,7 @@ function markNoAuthRouter(routers, permissionList, parentRouter) {
   }).map(item => {
     const temp = Object.assign({}, item)
     temp.absolute_path = path.join('/', parentRouter.path, temp.path)
-    // temp.hasAuth = permissionList.includes(temp.absolute_path)
-    temp.hasAuth = true
+    temp.hasAuth = hasPermission(temp.absolute_path)
 
     if (temp.children && temp.children.length > 0) {
       temp.children = markNoAuthRouter(temp.children, permissionList, temp)
