@@ -17,12 +17,14 @@ const whiteList = ['/login', '/authredirect', '/401', '/404']
 router.beforeEach((to, from, next) => {
   NProgress.start()
 
+  // 白名单路由直接放行
   if (whiteList.indexOf(to.path) !== -1) {
     next()
     NProgress.done()
     return
   }
 
+  // 检测登陆状态&刷新token
   const token = getToken()
   if (!token) {
     next(`/login?redirect=${to.path}`)
@@ -42,9 +44,7 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  console.log(store.getters.permission)
-  console.log(store.getters.permission.length < 1)
-  console.log(store.getters.addRouters.length < 1)
+  // 初始化用户权限
   if (store.getters.permission.length < 1 ||
        store.getters.addRouters.length < 1) {
     // 根据登录信息拉取权限信息
@@ -63,11 +63,11 @@ router.beforeEach((to, from, next) => {
     return
   }
 
+  // 判断用户权限
   let toPath = to.path
   if (to.matched && to.matched.length > 0) {
     toPath = to.matched[to.matched.length - 1].path
   }
-
   if (hasPermission(toPath)) {
     next()
   } else {
