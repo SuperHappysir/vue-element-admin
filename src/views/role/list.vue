@@ -91,7 +91,7 @@
         <div class="pagination-container">
           <el-pagination
             :current-page="listQuery.page"
-            :page-sizes="[1,15,30,50]"
+            :page-sizes="[15,30,50]"
             :page-size="listQuery.limit"
             :total="total"
             layout="total, sizes, prev, pager, next, jumper"
@@ -148,7 +148,7 @@ export default {
       listQuery: {
         name: '',
         page: 1,
-        limit: 1
+        limit: 15
       },
       dialogForm: {
         visible: false,

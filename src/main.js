@@ -28,7 +28,9 @@ Vue.use(Element, {
   i18n: (key, value) => i18n.t(key, value)
 })
 
-Vue.use(Avue, {})
+Vue.use(Avue, {
+  size: 'medium'
+})
 
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])
@@ -37,7 +39,7 @@ Object.keys(filters).forEach(key => {
 // 根据环境自动开启vue-devtool
 Vue.config.productionTip = process.env.NODE_ENV === 'production'
 
-new Vue({
+const app = new Vue({
   el: '#app',
   router,
   store,
@@ -45,4 +47,4 @@ new Vue({
   render: h => h(App)
 })
 
-export { router, store }
+export { app, router, store }
