@@ -19,8 +19,8 @@
         :expand-on-click-node="false"
         :filter-node-method="filterNode"
         :default-checked-keys="permission"
+        :default-expanded-keys="['/']"
         node-key="absolute_path"
-        default-expand-all
         show-checkbox>
         <span slot-scope="{ node, data }" class="custom-tree-node">
           <span class="mgl-10">
