@@ -25,12 +25,13 @@
         <span slot-scope="{ node, data }" class="custom-tree-node">
           <span class="mgl-10">
             {{ data.title }}
-            <el-tooltip content="菜:指代菜单,钮:指代按钮" placement="top">
+            <el-tooltip content="菜:指代菜单权限,钮:指代按钮权限,接指代API接口权限" placement="top">
               <el-tag v-if="data.permission_type === 2" class="mgl-10" type="success" size="mini">菜</el-tag>
               <el-tag v-else-if="data.permission_type === 3" class="mgl-10" type="success" size="mini">钮</el-tag>
+              <el-tag v-else-if="data.permission_type === 1" class="mgl-10" type="success" size="mini">接</el-tag>
             </el-tooltip>
             <el-tooltip content="权限还未同步到后端服务器" placement="top">
-              <el-tag v-if="syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
+              <el-tag v-if="data.permission_type !== 1 && syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
             </el-tooltip>
           </span>
           <span class="mgl-10">
@@ -48,7 +49,7 @@
 import { generateTitle } from '@/utils/i18n'
 import { asyncRouterMap } from '@/router'
 import { SyncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
-import { initializePermission } from '@/utils/permission'
+import { initializePermission, transferBackRoutePermissionToTree } from '@/utils/permission'
 import path from 'path'
 import debounce from 'lodash/debounce'
 import PermissionAdd from './add'
@@ -120,7 +121,7 @@ export default {
       this.loading = true
 
       // 获取所有权限，用于判断权限是否全部同步到后端
-      const response = await getMenuPermissionData({ limit: 10000 })
+      let response = await getMenuPermissionData({ limit: 10000 })
       this.permission = response.data.payload.paginate.items || []
       if (this.permission.length > 0) {
         const filterArr = this.permission.filter((item) => item.permission_type !== 1)
@@ -131,13 +132,12 @@ export default {
         })
       }
 
-      // 初始化用户权限
-      getRolePermissions(this.businessId).then(response => {
-        this.permission = response.data.payload.permission_list.map((item) => item.path)
-      })
-
       // 生成权限树形结构
       this.generateMenuTree()
+
+      // 初始化用户权限
+      response = await getRolePermissions(this.businessId)
+      this.permission = response.data.payload.permission_list.map((item) => item.path)
 
       this.loading = false
     },
@@ -159,7 +159,7 @@ export default {
         'name': '根对象',
         'title': '根对象',
         'permission_type': 2,
-        'children': this.getChildren(asyncRouterMap, { 'path': '/' }).filter(item => {
+        'children': this.getChildren(asyncRouterMap.concat(transferBackRoutePermissionToTree(this.permission)), { 'path': '/' }).filter(item => {
           return item.path !== '*' || item.alwaysShow
         })
       }]
@@ -170,12 +170,13 @@ export default {
       }
 
       return childrens.map((childenItem) => {
+        const title = childenItem.title || (childenItem.meta && childenItem.meta.title ? childenItem.meta.title : '')
         const newChilden = {
           'path': childenItem.path,
           'absolute_path': path.join('/', parentNode.path, childenItem.path),
-          'permission_type': 2,
+          'permission_type': childenItem.permission_type || 2,
           'name': typeof childenItem.name !== undefined ? childenItem.name : '',
-          'title': (childenItem.meta && childenItem.meta.title) ? this.generateTitle(childenItem.meta.title) : ''
+          'title': title ? this.generateTitle(title) : title
         }
 
         newChilden.children = newChilden.children || []

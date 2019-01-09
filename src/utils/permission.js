@@ -37,6 +37,26 @@ export function transferRoutePermission(menuList) {
   })
 }
 
+/**
+ * 转换菜单权限路由为后端格式
+ * @param {array} menuList 前端路由列表
+ * @param {int} parent_id 父节点ID
+ * @returns {{path: (*|string), name: *, description: *, permission_type: number}[]}
+ */
+export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
+  return menuList
+    .filter(item => parseInt(item.parent_id) === parent_id && parseInt(item.permission_type) === 1)
+    .map((item) => {
+      return {
+        'path': `${item.path}/${item.name}`,
+        'name': item.name,
+        'title': item.description,
+        'permission_type': 1,
+        'children': transferBackRoutePermissionToTree(menuList, item.id)
+      }
+    })
+}
+
 // 初始化权限
 export function initializePermission(userid) {
   return getUserPermissions(userid)
