@@ -21,8 +21,8 @@
         :filter-node-method="filterNode"
         :default-checked-keys="ownPermissionIdArr"
         :default-expanded-keys="[-1]"
-        node-key="id"
-        show-checkbox>
+        :show-checkbox="roleId > -1"
+        node-key="id">
         <span slot-scope="{ node, data }" class="custom-tree-node">
           <span class="mgl-10">
             {{ data.title }}
@@ -105,11 +105,7 @@ export default {
     }, 600),
     roleId: function(value) {
       if (this.roleId > 0) {
-        this.loading = true
-        getRolePermissions(value).then(response => {
-          this.permission = response.data.payload.permission_list.map((item) => item.path)
-          this.loading = false
-        })
+        this.init()
       }
     },
     permission(newValue) {
@@ -131,7 +127,7 @@ export default {
     },
     async initOwnPermission() {
       const response = await getRolePermissions(this.roleId)
-      this.permission = response.data.payload.permission_list.map((item) => item.path)
+      this.permission = response.data.payload.permission_list
     },
     async init() {
       this.loading = true
@@ -225,7 +221,7 @@ export default {
       const checkedMenus = this.$refs.menuPermTreeRef.getCheckedNodes()
       const permissionArr = []
       checkedMenus.forEach((item) => {
-        const permissionId = this.permissionPath2IdMap[item.absolute_path]
+        const permissionId = item.id
         if (permissionId) {
           permissionArr.push(permissionId)
         }

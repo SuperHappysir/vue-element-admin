@@ -4,8 +4,8 @@
       <!--<el-col :span="10">-->
       <!--<permission :business-type="1" :business-id="2"/>-->
       <!--</el-col>-->
-      <el-col :span="10">
-        <permission-tree :business-id="2"/>
+      <el-col :span="12">
+        <permission-tree :role-id="roleId"/>
       </el-col>
     </el-row>
 
@@ -22,7 +22,13 @@ import PermissionTree from './components/tree'
 
 export default{
   name: 'PermissionList',
-  components: { BackToTop, Permission, PermissionTree }
+  components: { BackToTop, Permission, PermissionTree },
+  props: {
+    roleId: {
+      type: Number,
+      default: -1
+    }
+  }
 }
 </script>
 

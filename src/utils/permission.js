@@ -48,6 +48,7 @@ export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
     .filter(item => parseInt(item.parent_id) === parent_id && parseInt(item.permission_type) === 1)
     .map((item) => {
       return {
+        'id': item.id,
         'path': `${item.path}/${item.method}`,
         'name': item.name,
         'title': item.description,
