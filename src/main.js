@@ -8,6 +8,8 @@ import 'element-ui/lib/theme-chalk/index.css'
 import Avue from '@smallwei/avue'
 import '@smallwei/avue/lib/theme-chalk/index.css'
 
+import VueParticles from 'vue-particles'
+
 import '@/styles/index.scss'
 
 import App from './App'
@@ -31,6 +33,8 @@ Vue.use(Element, {
 Vue.use(Avue, {
   size: 'medium'
 })
+
+Vue.use(VueParticles)
 
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])

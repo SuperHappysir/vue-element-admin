@@ -36,6 +36,7 @@
           </span>
           <span class="mgl-10">
             <el-button v-if="data.permission_type === 2" type="text" size="mini" icon="el-icon-plus" @click="showdialog('add', node, 'BUTTON')"/>
+            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click="showdialog('edit', node, 'API')"/>
             <el-button v-if="data.permission_type === 3 && syncMenu.indexOf(data.absolute_path) !== -1" class="delete-btn" type="text" size="mini" icon="el-icon-delete" @click="deletePermission(node)"/>
           </span>
         </span>
@@ -65,7 +66,7 @@ export default {
       default: 1
     },
     // 业务ID 分配类型为1时为角色ID 类型为2是为用户ID
-    businessId: {
+    roleId: {
       type: Number,
       default: -1
     }
@@ -84,7 +85,7 @@ export default {
       // 按父级分组的按钮字典
       buttonMap: [],
       // path为key 权限ID为value的对象
-      permissionPathWithIdMap: {},
+      permissionPath2IdMap: {},
       permission: [],
       filterMenuPermText: '',
       dialog: {
@@ -101,7 +102,7 @@ export default {
       // tree筛选
       this.$refs.menuPermTreeRef.filter(val)
     }, 600),
-    businessId: function(value) {
+    roleId: function(value) {
       this.loading = true
       getRolePermissions(value).then(response => {
         this.permission = response.data.payload.permission_list.map((item) => item.path)
@@ -128,7 +129,7 @@ export default {
         this.syncMenu = filterArr.map((item) => item.path)
 
         filterArr.forEach((item) => {
-          this.permissionPathWithIdMap[item.path] = item.id
+          this.permissionPath2IdMap[item.path] = item.id
         })
       }
 
@@ -136,7 +137,7 @@ export default {
       this.generateMenuTree()
 
       // 初始化用户权限
-      response = await getRolePermissions(this.businessId)
+      response = await getRolePermissions(this.roleId)
       this.permission = response.data.payload.permission_list.map((item) => item.path)
 
       this.loading = false
@@ -218,7 +219,7 @@ export default {
         this.syncMenu = filterArr.map((item) => item.path)
 
         filterArr.forEach((item) => {
-          this.permissionPathWithIdMap[item.path] = item.id
+          this.permissionPath2IdMap[item.path] = item.id
         })
       }
 
@@ -232,13 +233,13 @@ export default {
       const checkedMenus = this.$refs.menuPermTreeRef.getCheckedNodes()
       const permissionArr = []
       checkedMenus.forEach((item) => {
-        const permissionId = this.permissionPathWithIdMap[item.absolute_path]
+        const permissionId = this.permissionPath2IdMap[item.absolute_path]
         if (permissionId) {
           permissionArr.push(permissionId)
         }
       })
       if (this.businessType === 1) {
-        assignRolePermissions(this.businessId, permissionArr).then((result) => {
+        assignRolePermissions(this.roleId, permissionArr).then((result) => {
           return initializePermission(1)
         }).then((response) => {
           this.$message({

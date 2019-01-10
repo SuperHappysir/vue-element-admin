@@ -1,7 +1,6 @@
 import router from './router'
 import store from '@/store'
 import { getToken } from '@/utils/authToken'
-// 进度条
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 // 路由访问权限

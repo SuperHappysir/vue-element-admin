@@ -1,7 +1,7 @@
 /**
  *Created by jiachenpan on 16/11/29.
- * @param {Sting} url
- * @param {Sting} title
+ * @param {String} url
+ * @param {String} title
  * @param {Number} w
  * @param {Number} h
  */

@@ -1,8 +1,11 @@
 <template>
   <div class="app-container">
     <el-row :gutter="20">
+      <!--<el-col :span="10">-->
+      <!--<permission :business-type="1" :business-id="2"/>-->
+      <!--</el-col>-->
       <el-col :span="10">
-        <permission :business-type="1" :business-id="2"/>
+        <permission-tree :business-id="2"/>
       </el-col>
     </el-row>
 
@@ -15,10 +18,11 @@
 <script>
 import BackToTop from '@/components/BackToTop'
 import Permission from '@/components/Permission'
+import PermissionTree from './components/tree'
 
 export default{
   name: 'PermissionList',
-  components: { BackToTop, Permission }
+  components: { BackToTop, Permission, PermissionTree }
 }
 </script>
 
