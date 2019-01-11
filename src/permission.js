@@ -13,10 +13,10 @@ NProgress.configure({ showSpinner: false })
 const whiteList = ['/login', '/authredirect', '/401', '/404']
 
 // 路由权限控制
-router.beforeEach((to, from, next) => {
+router.beforeEach(async(to, from, next) => {
   NProgress.start()
 
-  // 白名单路由直接放行
+  // 白名单路由放行
   if (whiteList.indexOf(to.path) !== -1) {
     next()
     NProgress.done()
@@ -30,29 +30,36 @@ router.beforeEach((to, from, next) => {
     NProgress.done()
     return
   } else if (token.expired < Math.ceil(new Date().getTime() / 1000)) {
-    store.dispatch('refreshToken')
-      .then(() => {
-        next({ ...to, replace: true })
-      })
-      .catch(() => {
-        store.dispatch('clearToken').then(() => {
-          next({ ...to, replace: true })
-          NProgress.done()
-        })
-      })
+    // 刷新token,token刷新成功后对当前路由做重试处理
+    // 刷新失败后清空token,跳转登录页
+    try {
+      await store.dispatch('refreshToken')
+      next({ ...to, replace: true })
+    } catch (e) {
+      await store.dispatch('clearToken')
+      next(`/login?redirect=${to.path}`)
+      NProgress.done()
+    }
     return
+  }
+
+  // 用户信息
+  let user = store.getters.user
+  if (!user.id) {
+    user = await store.dispatch('GetUserInfo')
   }
 
   // 初始化用户权限
   if (store.getters.permission.length < 1 ||
        store.getters.addRouters.length < 1) {
     // 根据登录信息拉取权限信息
-    initializePermission(1).then((addRouters) => {
-      // 动态添加可访问路由表
-      router.addRoutes(addRouters)
-      next({ ...to, replace: true })
-      NProgress.done()
-    })
+    const addRouters = await initializePermission(user.id)
+
+    // 动态添加可访问路由表
+    router.addRoutes(addRouters)
+    next({ ...to, replace: true })
+    NProgress.done()
+
     return
   }
 

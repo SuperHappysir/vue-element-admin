@@ -98,9 +98,6 @@ export default {
         this.loading = true
         this.$store.dispatch('LoginByUsername', this.loginForm)
           .then(() => {
-            return this.$store.dispatch('GetUserInfo')
-          })
-          .then(() => {
             this.loading = false
             this.$router.push({ path: '/' })
           }).catch(() => {

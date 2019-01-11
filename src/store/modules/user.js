@@ -3,6 +3,7 @@ import { getToken, setToken, removeToken } from '@/utils/authToken'
 
 const user = {
   state: {
+    attr: {},
     name: '',
     token: getToken(),
     avatar: 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
@@ -15,7 +16,8 @@ const user = {
       state.token = token
     },
     SET_USER: (state, user) => {
-      state = Object.assign(state, user)
+      state.attr = user
+      state.name = user.nickname
     },
     SET_USER_PERMISSION: (state, permission) => {
       state.permission = permission
@@ -92,7 +94,7 @@ const user = {
           const data = response.data.payload
 
           commit('SET_USER', data)
-          resolve(response)
+          resolve(data)
         }).catch(error => {
           reject(error)
         })
