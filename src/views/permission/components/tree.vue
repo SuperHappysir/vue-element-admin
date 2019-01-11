@@ -17,11 +17,11 @@
         ref="menuPermTreeRef"
         :data="menuTree"
         :props="treeProps"
-        :expand-on-click-node="false"
         :filter-node-method="filterNode"
         :default-checked-keys="ownPermissionIdArr"
         :default-expanded-keys="[-1]"
         :show-checkbox="roleId > -1"
+        expand-on-click-node
         node-key="id">
         <span slot-scope="{ node, data }" class="custom-tree-node">
           <span class="mgl-10">
@@ -36,8 +36,8 @@
             </el-tooltip>
           </span>
           <span class="mgl-10">
-            <el-button v-if="data.permission_type === 2" type="text" size="mini" icon="el-icon-plus" @click="showdialog('add', node, 'BUTTON')"/>
-            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click="showdialog('edit', node, 'API')"/>
+            <el-button v-if="data.permission_type === 2" type="text" size="mini" icon="el-icon-plus" @click.stop="showdialog('add', node, 'BUTTON')"/>
+            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click.stop="showdialog('edit', node, 'API')"/>
             <el-button v-if="data.permission_type === 3 && syncMenu.indexOf(data.absolute_path) !== -1" class="delete-btn" type="text" size="mini" icon="el-icon-delete" @click="deletePermission(node)"/>
           </span>
         </span>
