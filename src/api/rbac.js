@@ -12,6 +12,10 @@ export function deletePermission(id) {
   return request.delete(`/api/permission/${id}`)
 }
 
+export function updatePermission(id, param) {
+  return request.put(`/api/permission/${id}`, param)
+}
+
 export function assignRolePermissions(roleid, permissionList) {
   return request.post(`/api/roles/${roleid}/permission`, { 'permission_list': permissionList })
 }

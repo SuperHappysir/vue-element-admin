@@ -36,27 +36,36 @@
             </el-tooltip>
           </span>
           <span class="mgl-10">
-            <el-button v-if="data.permission_type === 2" type="text" size="mini" icon="el-icon-plus" @click.stop="showdialog('add', node, 'BUTTON')"/>
-            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click.stop="showdialog('edit', node, 'API')"/>
-            <el-button v-if="data.permission_type === 3 && syncMenu.indexOf(data.absolute_path) !== -1" class="delete-btn" type="text" size="mini" icon="el-icon-delete" @click="deletePermission(node)"/>
+            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click.stop="showdialog(node)"/>
           </span>
         </span>
       </el-tree>
     </el-card>
+    <permission-edit
+      v-if="dialog.visible"
+      :current-node="dialog.node"
+      :dialog-visible.sync="dialog.visible"
+      :permssion-tree="menuTree"
+      @updateSuccess="init"/>
   </div>
 </template>
 
 <script>
 import { generateTitle } from '@/utils/i18n'
 import { asyncRouterMap } from '@/router'
-import { SyncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
-import { initializePermission, transferBackRoutePermissionToTree } from '@/utils/permission'
+import {
+  assignRolePermissions, deletePermission, getMenuPermissionData, getRolePermissions, SyncMenuPermissionData
+} from '@/api/rbac'
+import {
+  initializePermission, permissionTreeToList, transferBackRoutePermissionToTree, transferRoutePermission
+} from '@/utils/permission'
 import path from 'path'
 import debounce from 'lodash/debounce'
-import { getRolePermissions } from '@/api/rbac'
-import { transferRoutePermission, permissionTreeToList } from '@/utils/permission'
+import permissionEdit from './edit'
+
 export default {
   name: 'Tree',
+  components: { permissionEdit },
   props: {
     roleId: {
       type: Number,
@@ -74,7 +83,7 @@ export default {
         children: 'children'
       },
       // path为key 权限ID为value的对象
-      permissionPath2IdMap: {},
+      permissionPath2ObjectMap: {},
       // 所有权限源数据
       permissionSource: [],
       // 角色拥有的权限源数据
@@ -84,7 +93,7 @@ export default {
       // 添加/编辑dialog
       dialog: {
         visible: false,
-        type: 'add',
+        type: 'update',
         node: {}
       },
       loading: true
@@ -104,7 +113,7 @@ export default {
       this.$refs.menuPermTreeRef.filter(val)
     }, 600),
     roleId: function(value) {
-      if (this.roleId > 0) {
+      if (value > 0) {
         this.init()
       }
     },
@@ -121,7 +130,7 @@ export default {
       this.permissionSource = response.data.payload.paginate.items || []
       if (this.permissionSource.length > 0) {
         this.permissionSource.forEach((item) => {
-          this.permissionPath2IdMap[item.path] = item.id
+          this.permissionPath2ObjectMap[item.path] = item
         })
       }
     },
@@ -145,11 +154,9 @@ export default {
 
       this.loading = false
     },
-    showdialog(type, node, businessType) {
-      this.dialog.visible = true
-      this.dialog.type = type
+    showdialog(node) {
+      this.dialog.visible = !this.dialog.visible
       this.dialog.node = node
-      this.dialog.businessType = businessType
     },
     generateTitle,
     filterNode(value, data) {
@@ -164,7 +171,11 @@ export default {
         'name': '根对象',
         'title': '根对象',
         'permission_type': 2,
-        'children': this.getChildren(asyncRouterMap.concat(transferBackRoutePermissionToTree(this.permissionSource)), { 'path': '/' })
+        'parent_id': 0,
+        'children': this.getChildren(
+          asyncRouterMap.concat(transferBackRoutePermissionToTree(this.permissionSource)),
+          { 'path': '/' }
+        )
       }]
       this.menuTree = this.allMenuTree.filter(item => {
         return item.path !== '*' || item.alwaysShow
@@ -176,19 +187,26 @@ export default {
       }
 
       return childrens.map((childenItem) => {
-        const absolutePath = path.join('/', parentNode.path, childenItem.path)
-        const id = childenItem.id || (this.permissionPath2IdMap[absolutePath] || 0)
+        const absolutePath = childenItem.permission_type !== 1 ? path.join('/', parentNode.path, childenItem.path) : childenItem.path
+        const id = childenItem.id ||
+          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
         if (!id) {
           return null
         }
+        const parent_id = childenItem.parent_id ||
+          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].parent_id : 0)
+
         const title = childenItem.title || (childenItem.meta && childenItem.meta.title ? childenItem.meta.title : '')
+
         const newChilden = {
           'id': id,
           'path': childenItem.path,
           'absolute_path': absolutePath,
+          'parent_id': parent_id,
           'permission_type': childenItem.permission_type || 2,
           'name': typeof childenItem.name !== undefined ? childenItem.name : '',
-          'title': title ? this.generateTitle(title) : title
+          'title': title ? this.generateTitle(title) : title,
+          'source': childenItem.source || {}
         }
 
         newChilden.children = newChilden.children || []
@@ -204,7 +222,7 @@ export default {
       // 将前端权限钻换成后端对应的格式
       const menuTree = transferRoutePermission(
         // 将树型权限转成列表
-        permissionTreeToList(this.allMenuTree)
+        permissionTreeToList(this.allMenuTree).filter(item => item.permission_type === 2)
       )
 
       await SyncMenuPermissionData({ 'permissions': menuTree })
@@ -227,7 +245,7 @@ export default {
         }
       })
       assignRolePermissions(this.roleId, permissionArr).then((result) => {
-        return initializePermission(1)
+        return initializePermission(this.$store.getters.user.id)
       }).then((response) => {
         this.$message({
           message: '权限分配成功',

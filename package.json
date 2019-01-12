@@ -34,6 +34,7 @@
     "url": "https://github.com/PanJiaChen/vue-element-admin/issues"
   },
   "dependencies": {
+    "@riophae/vue-treeselect": "0.0.37",
     "@smallwei/avue": "^1.5.0",
     "axios": "0.18.0",
     "clipboard": "1.7.1",
@@ -114,7 +115,7 @@
     "vue-loader": "15.3.0",
     "vue-style-loader": "4.1.2",
     "vue-template-compiler": "2.5.17",
-    "webpack": "^4.28.3",
+    "webpack": "^4.28.4",
     "webpack-bundle-analyzer": "2.13.1",
     "webpack-cli": "3.1.0",
     "webpack-dev-server": "3.1.5",

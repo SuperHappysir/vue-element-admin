@@ -428,7 +428,7 @@ export default {
         }
       }
     },
-    handleChange(e) {
+    handleSelect(e) {
       e.preventDefault()
       if (this.loading !== 1) {
         const files = e.target.files || e.dataTransfer.files

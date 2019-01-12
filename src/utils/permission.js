@@ -49,11 +49,13 @@ export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
     .map((item) => {
       return {
         'id': item.id,
-        'path': `${item.path}/${item.method}`,
+        'path': `${item.method}:${item.path}`,
         'name': item.name,
         'title': item.description,
         'permission_type': 1,
-        'children': transferBackRoutePermissionToTree(menuList, item.id)
+        'parent_id': item.parent_id,
+        'children': transferBackRoutePermissionToTree(menuList, item.id),
+        'source': item
       }
     })
 }
