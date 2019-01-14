@@ -3,7 +3,7 @@
     :value="value"
     :multiple="multiple"
     :default-expand-level="options.defaultExpandLevel"
-    :options="dic"
+    :options="treeArr"
     :allow-selecting-disabled-descendants="options.allowSelectingDisabledDescendants"
     :value-format="options.valueFormat"
     :value-consists-of="options.valueConsistsOf"
@@ -65,6 +65,18 @@ export default {
       default: false
     },
     options: {
+      idKey: {
+        type: String,
+        default: 'id'
+      },
+      valKey: {
+        type: String,
+        default: 'label'
+      },
+      childrenKey: {
+        type: String,
+        default: 'children'
+      },
       defaultExpandLevel: {
         type: Number,
         default: 0
@@ -162,12 +174,35 @@ export default {
       text: undefined
     }
   },
+  computed: {
+    treeArr() {
+      return this.transformKeyValue(this.dic)
+    }
+  },
   methods: {
     handleClick() {
       if (typeof this.click === 'function') { this.click({ value: this.text, column: this.column }) }
     },
     handleSelect(object) {
       this.$emit('select', object)
+    },
+    // 转换权限数据为tree树格式
+    transformKeyValue(arr) {
+      if (!arr) {
+        return []
+      }
+      return arr.map(item => {
+        const object = {
+          id: item[this.options.idKey],
+          label: item[this.options.valKey]
+        }
+
+        const children = this.transformKeyValue(item[this.options.childrenKey])
+        if (children.length > 0) {
+          object[this.options.childrenKey] = children
+        }
+        return object
+      })
     }
   }
 }

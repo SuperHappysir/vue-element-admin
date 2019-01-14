@@ -3,9 +3,9 @@
     <el-form ref="dataForm" :rules="rules" :model="temp" label-position="top">
       <el-form-item label="父级权限值" prop="parent_id">
         <select-tree
-          :dic="permissionData"
+          :dic="permssionTree"
           :value="temp.parent_id"
-          :options="{defaultExpandLevel: 2}"
+          :options="{defaultExpandLevel: 2, idKey: 'id', valKey:'title', childrenKey:'children'}"
           @select="handleParentIdChange"
         />
       </el-form-item>
@@ -134,6 +134,7 @@ export default {
     handleParentIdChange(object) {
       this.temp.parent_id = object.id
     },
+    // 转换权限数据为tree树格式
     transformKeyValue(permissionArr) {
       if (!permissionArr) {
         return []

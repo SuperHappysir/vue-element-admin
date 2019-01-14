@@ -1,78 +1,36 @@
 <template>
-  <div>
-    <select-tree
-      :dic="dic"
-      :options="option"/>
-  </div>
+  <el-container>
+    <el-aside>发布</el-aside>
+    <el-main>
+      <div style="margin: 15px 0;border-top: 1px #97a8be solid; padding-top: 20px;">
+        <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" style="margin: 20px 0;" @change="handleCheckAllChange">全选</el-checkbox>
+        <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
+          <el-checkbox v-for="city in cities" :label="city" :key="city">{{ city }}</el-checkbox>
+        </el-checkbox-group>
+      </div>
+    </el-main>
+  </el-container>
 </template>
-
 <script>
-import '@/components/SelectTree'
-import SelectTree from '@/components/SelectTree/index'
-
+const cityOptions = ['上海', '北京', '广州', '深圳']
 export default {
-  components: { SelectTree },
-  data: () => ({
-    value: [],
-    placeholder: '请选择...',
-    dic: [
-      {
-        id: 'fruits',
-        label: 'Fruits',
-        children: [
-          {
-            id: 'apple',
-            label: 'Apple 🍎',
-            isNew: true
-          },
-          {
-            id: 'grapes',
-            label: 'Grapes 🍇'
-          },
-          {
-            id: 'pear',
-            label: 'Pear 🍐'
-          },
-          {
-            id: 'strawberry',
-            label: 'Strawberry 🍓'
-          },
-          {
-            id: 'watermelon',
-            label: 'Watermelon 🍉'
-          }
-        ]
-      },
-      {
-        id: 'vegetables',
-        label: 'Vegetables',
-        children: [
-          {
-            id: 'corn',
-            label: 'Corn 🌽'
-          },
-          {
-            id: 'carrot',
-            label: 'Carrot 🥕'
-          },
-          {
-            id: 'eggplant',
-            label: 'Eggplant 🍆'
-          },
-          {
-            id: 'tomato',
-            label: 'Tomato 🍅'
-          }
-        ]
-      }
-    ],
-    option: {
-      defaultExpandLevel: 2
+  data() {
+    return {
+      checkAll: false,
+      checkedCities: ['上海', '北京'],
+      cities: cityOptions,
+      isIndeterminate: true
     }
-  }),
+  },
   methods: {
-    submit() {
-      this.$message.success('当前数据' + JSON.stringify(this.form))
+    handleCheckAllChange(val) {
+      this.checkedCities = val ? cityOptions : []
+      this.isIndeterminate = false
+    },
+    handleCheckedCitiesChange(value) {
+      const checkedCount = value.length
+      this.checkAll = checkedCount === this.cities.length
+      this.isIndeterminate = checkedCount > 0 && checkedCount < this.cities.length
     }
   }
 }
