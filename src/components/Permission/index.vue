@@ -49,7 +49,7 @@
 <script>
 import { generateTitle } from '@/utils/i18n'
 import { asyncRouterMap } from '@/router'
-import { SyncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
+import { syncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
 import { initializePermission, transferBackRoutePermissionToTree } from '@/utils/permission'
 import path from 'path'
 import debounce from 'lodash/debounce'
@@ -203,14 +203,14 @@ export default {
       })
     },
     // 同步路由到后端
-    async SyncMenuPermissionData() {
+    async syncMenuPermissionData() {
       // 将前端权限钻换成后端对应的格式
       const menuTree = transferRoutePermission(
         // 建树型权限转成列表
         permissionTreeToList(this.menuTree)
       )
 
-      await SyncMenuPermissionData({ 'permissions': menuTree })
+      await syncMenuPermissionData({ 'permissions': menuTree })
 
       const response = await getMenuPermissionData({ limit: 10000 })
       this.permission = response.data.payload.paginate.items || []

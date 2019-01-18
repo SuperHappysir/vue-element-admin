@@ -106,7 +106,8 @@
     </el-collapse-transition>
     <el-collapse-transition>
       <el-dialog :visible.sync="permissionDialogForm.visible" title="分配权限" width="30%">
-        <permission :business-type="permissionDialogForm.businessType" :business-id="permissionDialogForm.payload.id"/>
+        <!--<permission :business-type="permissionDialogForm.businessType" :business-id="permissionDialogForm.payload.id"/>-->
+        <permission-tree :role-id="permissionDialogForm.payload.id"/>
       </el-dialog>
     </el-collapse-transition>
     <el-tooltip placement="top" content="去顶部">
@@ -123,10 +124,11 @@ import Permission from '@/components/Permission'
 import waves from '@/directive/waves' // 水波纹指令
 import Sticky from '@/components/Sticky'
 import clipboard from '@/directive/clipboard/index'
+import PermissionTree from '@/views/permission/components/tree'
 
 export default {
   name: 'RoleList',
-  components: { RoleDetail, BackToTop, Permission, Sticky },
+  components: { RoleDetail, BackToTop, Permission, Sticky, PermissionTree },
   filters: {
     statusFilter(status) {
       const statusMap = {

@@ -4,9 +4,8 @@
       <div slot="header">
         <div class="title-box">
           <el-tooltip content="同步权限数据到后端" placement="top">
-            <el-button type="primary" size="mini" round @click="SyncMenuPermissionData">同步数据</el-button>
+            <el-button type="primary" size="mini" round @click="syncMenuPermissionData">同步数据</el-button>
           </el-tooltip>
-          <!-- 仅执行权限分配的时候才展示此按钮 -->
           <el-tooltip v-if="roleId !== -1" content="分配权限" placement="top">
             <el-button type="success" size="mini" round @click="assignPermissions">分配权限</el-button>
           </el-tooltip>
@@ -27,12 +26,12 @@
           <span class="mgl-10">
             {{ data.title }}
             <el-tooltip content="菜:指代菜单权限,钮:指代按钮权限,接指代API接口权限" placement="top">
-              <el-tag v-if="data.permission_type === 2" class="mgl-10" type="success" size="mini">菜</el-tag>
-              <el-tag v-else-if="data.permission_type === 3" class="mgl-10" type="success" size="mini">钮</el-tag>
-              <el-tag v-else-if="data.permission_type === 1" class="mgl-10" type="success" size="mini">接</el-tag>
+              <el-tag v-if="isMenu(data.permission_type)" class="mgl-10" type="success" size="mini">菜</el-tag>
+              <el-tag v-else-if="isButton(data.permission_type)" class="mgl-10" type="success" size="mini">钮</el-tag>
+              <el-tag v-else-if="isApi(data.permission_type)" class="mgl-10" type="success" size="mini">接</el-tag>
             </el-tooltip>
             <el-tooltip content="权限还未同步到后端服务器" placement="top">
-              <el-tag v-if="data.permission_type !== 1 && syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
+              <el-tag v-if="!isApi(data.permission_type) && syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
             </el-tooltip>
           </span>
           <span class="mgl-10">
@@ -54,18 +53,20 @@
 import { generateTitle } from '@/utils/i18n'
 import { asyncRouterMap } from '@/router'
 import {
-  assignRolePermissions, deletePermission, getMenuPermissionData, getRolePermissions, SyncMenuPermissionData
+  assignRolePermissions, generateBackendPremission, getMenuPermissionData, getRolePermissions, syncMenuPermissionData
 } from '@/api/rbac'
 import {
   initializePermission, permissionTreeToList, transferBackRoutePermissionToTree, transferRoutePermission
 } from '@/utils/permission'
 import path from 'path'
-import debounce from 'lodash/debounce'
+import debounce from 'lodash.debounce'
 import permissionEdit from './edit'
+import { PermissionMixin } from '@/constant/permission'
 
 export default {
   name: 'Tree',
   components: { permissionEdit },
+  mixins: [PermissionMixin],
   props: {
     roleId: {
       type: Number,
@@ -74,23 +75,22 @@ export default {
   },
   data() {
     return {
+      // 所有权限树
       allMenuTree: [],
-      // 菜单 element tree源数据
+      // 过滤不显示的权限后的树
       menuTree: [],
-      // element树参数
       treeProps: {
         label: 'title',
         children: 'children'
       },
-      // path为key 权限ID为value的对象
+      // path为key 权限对象为value的对象
       permissionPath2ObjectMap: {},
-      // 所有权限源数据
+      // 后端返回的权限源数据
       permissionSource: [],
-      // 角色拥有的权限源数据
-      permission: [],
-      // 树形插件筛选
+      // 当前角色拥有的权限
+      rolePermission: [],
+      // 权限树筛选变量
       filterMenuPermText: '',
-      // 添加/编辑dialog
       dialog: {
         visible: false,
         type: 'update',
@@ -104,15 +104,14 @@ export default {
       return this.permissionSource.map((item) => item.path)
     },
     ownPermissionIdArr() {
-      return this.permission.map((item) => item.id).filter((item) => !!item)
+      return this.rolePermission.map((item) => item.id).filter((item) => !!item)
     }
   },
   watch: {
     'filterMenuPermText': debounce(function(val) {
-      // tree筛选
       this.$refs.menuPermTreeRef.filter(val)
     }, 600),
-    roleId: function(value) {
+    roleId(value) {
       if (value > 0) {
         this.init()
       }
@@ -136,20 +135,17 @@ export default {
     },
     async initOwnPermission() {
       const response = await getRolePermissions(this.roleId)
-      this.permission = response.data.payload.permission_list
+      this.rolePermission = response.data.payload.permission_list
     },
     async init() {
       this.loading = true
 
-      // 获取所有权限
       await this.initPermission()
 
-      // 初始化角色权限
       if (this.roleId > 0) {
         await this.initOwnPermission()
       }
 
-      // 生成权限树形结构
       await this.generateMenuTree()
 
       this.loading = false
@@ -217,15 +213,21 @@ export default {
         return newChilden
       }).filter(item => !!item)
     },
+
     // 同步路由到后端
-    async SyncMenuPermissionData() {
+    async syncMenuPermissionData() {
       // 将前端权限钻换成后端对应的格式
       const menuTree = transferRoutePermission(
         // 将树型权限转成列表
-        permissionTreeToList(this.allMenuTree).filter(item => item.permission_type === 2)
+        permissionTreeToList(this.allMenuTree).filter(item => !this.isApi(item.permission_type))
       )
 
-      await SyncMenuPermissionData({ 'permissions': menuTree })
+      await Promise.all([
+        // 同步前端数据
+        syncMenuPermissionData({ 'permissions': menuTree }),
+        // 后端路由数据生成
+        generateBackendPremission()
+      ])
 
       await this.init()
 
@@ -234,36 +236,32 @@ export default {
         type: 'success'
       })
     },
-    // 分配权限
-    assignPermissions() {
+    // 获取已选择权限
+    getCheckedPermissionIdArr() {
       const checkedMenus = this.$refs.menuPermTreeRef.getCheckedNodes()
-      const permissionArr = []
+      const permissionIdArr = []
       checkedMenus.forEach((item) => {
         const permissionId = item.id
         if (permissionId) {
-          permissionArr.push(permissionId)
+          permissionIdArr.push(permissionId)
         }
       })
-      assignRolePermissions(this.roleId, permissionArr).then((result) => {
-        return initializePermission(this.$store.getters.user.id)
-      }).then((response) => {
-        this.$message({
-          message: '权限分配成功',
-          type: 'success'
-        })
-      })
+      return permissionIdArr
     },
-    deletePermission(node) {
-      this.$confirm(`确认删除按钮【${node.data.name}】?`)
-        .then(() => {
-          return deletePermission(node.data.id)
-        }).then(() => {
-          this.init()
-          this.$message({
-            message: '删除成功',
-            type: 'success'
-          })
-        })
+    // 分配权限
+    async assignPermissions() {
+      const permissionIdArr = this.getCheckedPermissionIdArr()
+
+      const resp = await assignRolePermissions(this.roleId, permissionIdArr)
+
+      this.$emit('assign-success', resp)
+
+      await initializePermission(this.$store.getters.user.id)
+
+      this.$message({
+        message: '权限分配成功',
+        type: 'success'
+      })
     }
   }
 }

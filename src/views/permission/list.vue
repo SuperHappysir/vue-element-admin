@@ -1,10 +1,7 @@
 <template>
   <div class="app-container">
-    <el-row :gutter="20">
-      <!--<el-col :span="10">-->
-      <!--<permission :business-type="1" :business-id="2"/>-->
-      <!--</el-col>-->
-      <el-col :span="12">
+    <el-row :gutter="10">
+      <el-col :xs="8" :sm="8" :md="8">
         <permission-tree :role-id="roleId"/>
       </el-col>
     </el-row>
@@ -19,10 +16,11 @@
 import BackToTop from '@/components/BackToTop'
 import Permission from '@/components/Permission'
 import PermissionTree from './components/tree'
+import PermissionGroup from './components/permissionGroup'
 
 export default{
   name: 'PermissionList',
-  components: { BackToTop, Permission, PermissionTree },
+  components: { BackToTop, Permission, PermissionTree, PermissionGroup },
   props: {
     roleId: {
       type: Number,

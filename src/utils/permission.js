@@ -2,6 +2,7 @@ import store from '@/store'
 import { getUserPermissions } from '@/api/rbac'
 import { asyncRouterMap, constantRouterMap } from '@/router'
 import path from 'path'
+import { PERMISSION_TYPE } from '@/constant/permission'
 
 /**
  * 菜单权限树转换成列表形式
@@ -28,11 +29,12 @@ export function permissionTreeToList(tree) {
  */
 export function transferRoutePermission(menuList) {
   return menuList.map((item) => {
+    console.log(item)
     return {
       'path': item.absolute_path,
       'name': item.name,
       'description': item.title,
-      'permission_type': 2
+      'permission_type': item.permission_type || item.meta.permission_type || PERMISSION_TYPE.MENU
     }
   })
 }
@@ -45,14 +47,14 @@ export function transferRoutePermission(menuList) {
  */
 export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
   return menuList
-    .filter(item => parseInt(item.parent_id) === parent_id && parseInt(item.permission_type) === 1)
+    .filter(item => parseInt(item.parent_id) === parent_id && PERMISSION_TYPE.isApi(item.permission_type))
     .map((item) => {
       return {
         'id': item.id,
         'path': `${item.method}:${item.path}`,
         'name': item.name,
         'title': item.description,
-        'permission_type': 1,
+        'permission_type': PERMISSION_TYPE.API,
         'parent_id': item.parent_id,
         'children': transferBackRoutePermissionToTree(menuList, item.id),
         'source': item
@@ -61,22 +63,20 @@ export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
 }
 
 // 初始化权限
-export function initializePermission(userid) {
-  return getUserPermissions(userid)
-    .then(response => {
-      return response.data.payload.permission_list || []
-    })
-    // 设置用戶权限
-    .then(permissionList => {
-      const items = permissionTreeToList(constantRouterMap)
-      return store.dispatch('setUserPermission', permissionList.concat(items))
-    })
-    // 初始化用戶可見的menu
-    .then(permissionList => {
-      permissionList = permissionList.map((item) => item.path)
-      const addRouters = markNoAuthRouter(asyncRouterMap, permissionList)
-      return store.dispatch('GenerateRoutes', addRouters)
-    })
+export async function initializePermission(userid) {
+  // 获取用户权限
+  const response = await getUserPermissions(userid)
+  let permissionList = response.data.payload.permission_list || []
+
+  // 设置用戶权限
+  const items = permissionTreeToList(constantRouterMap)
+  await store.dispatch('setUserPermission', permissionList.concat(items))
+
+  // 初始化用戶可見的menu
+  permissionList = store.getters.permission_path
+  const addRouters = markNoAuthRouter(asyncRouterMap, permissionList)
+
+  return store.dispatch('GenerateRoutes', addRouters)
 }
 
 // 判断是否有访问权限
@@ -88,7 +88,9 @@ export function hasPermission(toPath) {
 function markNoAuthRouter(routers, permissionList, parentRouter) {
   parentRouter = parentRouter || { path: '/' }
   return routers.filter(item => {
-    return item.path !== '*' || item.alwaysShow
+    return item.path !== '*' ||
+      item.alwaysShow ||
+      (item.meta && item.meta.permission_type && PERMISSION_TYPE.isMenu(item.meta.permission_type))
   }).map(item => {
     const temp = Object.assign({}, item)
     temp.absolute_path = path.join('/', parentRouter.path, temp.path)

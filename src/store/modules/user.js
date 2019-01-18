@@ -1,5 +1,6 @@
 import { loginByUsername, logout, getUserInfo, refreshToken } from '@/api/login'
 import { getToken, setToken, removeToken } from '@/utils/authToken'
+// import { PERMISSION_TYPE } from '@/constant/permission'
 
 const user = {
   state: {
@@ -29,7 +30,11 @@ const user = {
     setUserPermission({ commit }, permission) {
       return new Promise(resolve => {
         commit('SET_USER_PERMISSION', permission.filter(item => {
-          return !!item && parseInt(item.permission_type) !== 1
+          return !!item
+          // 排除不是菜单的权限
+          // return !!item &&
+          //   (parseInt(item.permission_type) !== PERMISSION_TYPE.MENU ||
+          //     (item.meta && parseInt(item.meta.permission_type) !== PERMISSION_TYPE.MENU))
         }))
         resolve(permission)
       })

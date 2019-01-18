@@ -8,6 +8,7 @@ import Layout from '@/views/layout/Layout'
 
 /* Router Modules */
 import asyncRouter from './asyncRouter'
+import { PERMISSION_TYPE } from '@/constant/permission'
 
 /** note: submenu only apppear when children.length>=1
  *  detail see  https://panjiachen.github.io/vue-element-admin-site/guide/essentials/router-and-nav.html
@@ -57,7 +58,7 @@ export const constantRouterMap = [
         path: '/dashboard',
         component: () => import('@/views/dashboard/index'),
         name: 'Dashboard',
-        meta: { title: 'dashboard', icon: 'dashboard', noCache: true }
+        meta: { title: 'dashboard', icon: 'dashboard', noCache: true, permission_type: PERMISSION_TYPE.MENU }
       }
     ]
   }

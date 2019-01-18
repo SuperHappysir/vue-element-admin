@@ -2,6 +2,8 @@
 
 /* Layout */
 import Layout from '@/views/layout/Layout'
+import role from './modules/role'
+import { PERMISSION_TYPE } from '@/constant/permission'
 
 export default [
   {
@@ -11,35 +13,19 @@ export default [
     name: 'Permission',
     meta: {
       title: 'example',
-      icon: 'example'
+      icon: 'example',
+      permission_type: PERMISSION_TYPE.MENU
     },
     children: [
       {
         path: 'list',
         component: () => import('@/views/permission/list'),
         name: 'PermissionList',
-        meta: { title: 'PermissionList', icon: 'edit' }
+        meta: { title: 'PermissionList', icon: 'list', permission_type: PERMISSION_TYPE.MENU }
       }
     ]
   },
-  {
-    path: '/role',
-    component: Layout,
-    redirect: '/role/list',
-    name: 'Example',
-    meta: {
-      title: 'role',
-      icon: 'example'
-    },
-    children: [
-      {
-        path: 'list',
-        component: () => import('@/views/role/list'),
-        name: 'roleList',
-        meta: { title: 'roleList', icon: 'list' }
-      }
-    ]
-  },
+  role,
   {
     path: '/upload',
     component: Layout,
@@ -54,7 +40,7 @@ export default [
         path: 'demo',
         component: () => import('@/views/uploader/avatarUpload'),
         name: 'uploadDemo',
-        meta: { title: 'uploadDemo', icon: 'list' }
+        meta: { title: 'uploadDemo', icon: 'list', permission_type: PERMISSION_TYPE.MENU }
       }
     ]
   },
