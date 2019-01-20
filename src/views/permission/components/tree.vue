@@ -78,13 +78,12 @@ import {
   assignRolePermissions, generateBackendPremission, getMenuPermissionData, getRolePermissions, syncMenuPermissionData
 } from '@/api/rbac'
 import {
-  initializePermission, permissionTreeToList, transferBackRoutePermissionToTree, transferRoutePermission
+  initializePermission, permissionTreeToList, transferBackendRoutePermission, transferFrontendRoutePermissionListFormat
 } from '@/utils/permission'
 import path from 'path'
 import debounce from 'lodash.debounce'
 import permissionEdit from './edit'
 import { PERMISSION_TYPE, PermissionMixin } from '@/constant/permission'
-import { deepClone } from '@/utils'
 
 export default {
   name: 'Tree',
@@ -183,6 +182,11 @@ export default {
       return data.name.indexOf(value) !== -1 || data.path.indexOf(value) !== -1 || data.title.indexOf(value) !== -1
     },
     generateMenuTree() {
+      const backendPemissionArr = this.permissionSource.filter(item => this.isApi(item.permission_type)).map(transferBackendRoutePermission)
+
+      const frontendPermissionArr = permissionTreeToList(this.computedAsyncRouterId(asyncRouterArr))
+      const allPermissionArr = frontendPermissionArr.concat(backendPemissionArr)
+
       this.allMenuTree = [{
         'id': -1,
         'path': '/',
@@ -192,67 +196,61 @@ export default {
         'permission_type': 2,
         'parent_id': 0,
         'children': this.getChildren(
-          this.computedAsyncRouterId(asyncRouterArr).concat(transferBackRoutePermissionToTree(this.permissionSource))
+          allPermissionArr,
+          0
         )
       }]
       this.menuTree = this.allMenuTree.filter(item => {
         return item.path !== '*' || item.alwaysShow
       })
     },
-    getChildren(childrens, parentNode = { 'path': '/' }) {
-      if (!childrens) {
-        return []
-      }
-
-      return childrens.map((childenItem) => {
-        const absolutePath = !this.isApi(childenItem.permission_type) ? path.join('/', parentNode.path, childenItem.path) : childenItem.path
-        const id = childenItem.id ||
-          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
-        if (!id) {
-          return null
+    getChildren(allPermissionArr, parentId = 0) {
+      return allPermissionArr.filter(item => parseInt(item.parent_id) === parentId).map(item => {
+        if (item.id > 0) {
+          item.children = this.getChildren(allPermissionArr, item.id)
         }
-        const parent_id = childenItem.parent_id ||
-          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].parent_id : 0)
-
-        const title = childenItem.title || (childenItem.meta && childenItem.meta.title ? childenItem.meta.title : '')
-
-        const newChilden = {
-          'id': id,
-          'path': childenItem.path,
-          'absolute_path': absolutePath,
-          'parent_id': parent_id,
-          'permission_type': childenItem.permission_type || PERMISSION_TYPE.MENU,
-          'name': typeof childenItem.name !== undefined ? childenItem.name : '',
-          'title': title ? this.generateTitle(title) : title,
-          'source': childenItem.source || {}
-        }
-
-        newChilden.children = newChilden.children || []
-        if (childenItem.children && childenItem.children.length > 0) {
-          newChilden.children = this.getChildren(childenItem.children, newChilden)
-        }
-
-        return newChilden
-      }).filter(item => !!item)
-    },
-    // 生成vue路由的ID
-    computedAsyncRouterId(asyncRouterArr, parentNode = { 'path': '/' }) {
-      return asyncRouterArr.map(item => {
-        const absolutePath = !this.isApi(item.permission_type) ? path.join('/', parentNode.path, item.path) : item.path
-        item.id = item.id ||
-          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
-        item.children = item.children || []
-        if (item.children.length > 0) {
-          item.children = this.computedAsyncRouterId(item.children, deepClone(item))
-        }
+        item.name = typeof item.name !== undefined ? item.name : ''
+        const title = item.title || (item.meta && item.meta.title ? item.meta.title : '')
+        item.title = this.generateTitle(title)
 
         return item
+      })
+    },
+    // 生成vue路由的对应的后端权限ID
+    computedAsyncRouterId(asyncRouterArr, parentNode = { 'path': '/' }) {
+      return asyncRouterArr.map(item => {
+        // 绝对路径
+        const absolutePath = !this.isApi(item.permission_type) ? path.join('/', parentNode.path, item.path) : item.path
+        // 权限ID
+        item.id = item.id ||
+          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
+        // 父节点ID
+        const parent_id = item.parent_id ||
+          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].parent_id : 0)
+        // 权限title
+        const title = item.title || (item.meta && item.meta.title ? item.meta.title : '')
+        // 子节点数组
+        item.children = item.children || []
+        if (item.children.length > 0) {
+          item.children = this.computedAsyncRouterId(item.children, item)
+        }
+        return {
+          'id': item.id,
+          'path': item.path,
+          'children': item.children,
+          'absolute_path': absolutePath,
+          'parent_id': parent_id,
+          'permission_type': item.permission_type || PERMISSION_TYPE.MENU,
+          'name': typeof item.name !== undefined ? item.name : '',
+          'title': title ? this.generateTitle(title) : title,
+          'source': item.source || {}
+        }
       })
     },
     // 同步路由到后端
     async syncMenuPermissionData() {
       // 将前端权限钻换成后端对应的格式
-      const menuTree = transferRoutePermission(
+      const menuTree = transferFrontendRoutePermissionListFormat(
         // 将树型权限转成列表
         permissionTreeToList(this.allMenuTree).filter(item => !this.isApi(item.permission_type))
       )

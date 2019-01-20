@@ -281,15 +281,15 @@ export function deepClone(source) {
   if (!source && typeof source !== 'object') {
     throw new Error('error arguments, shallowClone')
   }
-  const targetObj = source.constructor === Array ? [] : {}
-  Object.keys(source).forEach(keys => {
-    if (source[keys] && typeof source[keys] === 'object') {
-      targetObj[keys] = deepClone(source[keys])
+  const temp = source.constructor === Array ? [] : {}
+  Object.keys(source).forEach(key => {
+    if (source[key] && typeof source[key] === 'object') {
+      temp[key] = deepClone(source[key])
     } else {
-      targetObj[keys] = source[keys]
+      temp[key] = source[key]
     }
   })
-  return targetObj
+  return temp
 }
 
 export function uniqueArr(arr) {

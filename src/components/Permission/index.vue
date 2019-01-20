@@ -50,12 +50,12 @@
 import { generateTitle } from '@/utils/i18n'
 import { asyncRouterArr } from '@/router'
 import { syncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
-import { initializePermission, transferBackRoutePermissionToTree } from '@/utils/permission'
+import { initializePermission, transferBackRoutePermissionListToTree } from '@/utils/permission'
 import path from 'path'
 import debounce from 'lodash/debounce'
 import PermissionAdd from './add'
 import { getRolePermissions } from '@/api/rbac'
-import { transferRoutePermission, permissionTreeToList } from '@/utils/permission'
+import { transferFrontendRoutePermissionListFormat, permissionTreeToList } from '@/utils/permission'
 export default {
   name: 'Permission',
   components: { PermissionAdd },
@@ -160,7 +160,7 @@ export default {
         'name': '根对象',
         'title': '根对象',
         'permission_type': 2,
-        'children': this.getChildren(asyncRouterArr.concat(transferBackRoutePermissionToTree(this.permission)), { 'path': '/' }).filter(item => {
+        'children': this.getChildren(asyncRouterArr.concat(transferBackRoutePermissionListToTree(this.permission)), { 'path': '/' }).filter(item => {
           return item.path !== '*' || item.alwaysShow
         })
       }]
@@ -205,7 +205,7 @@ export default {
     // 同步路由到后端
     async syncMenuPermissionData() {
       // 将前端权限钻换成后端对应的格式
-      const menuTree = transferRoutePermission(
+      const menuTree = transferFrontendRoutePermissionListFormat(
         // 建树型权限转成列表
         permissionTreeToList(this.menuTree)
       )

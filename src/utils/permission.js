@@ -23,41 +23,64 @@ export function permissionTreeToList(tree) {
 }
 
 /**
- * 转换菜单权限路由为后端格式
+ * 批量转换菜单权限路由数组为后端格式数组
  * @param {array} menuList 前端路由列表
  * @returns {{path: (*|string), name: *, description: *, permission_type: number}[]}
  */
-export function transferRoutePermission(menuList) {
+export function transferFrontendRoutePermissionListFormat(menuList) {
   return menuList.map((item) => {
-    return {
-      'path': item.absolute_path,
-      'name': item.name,
-      'description': item.title,
-      'permission_type': item.permission_type || item.meta.permission_type || PERMISSION_TYPE.MENU
-    }
+    return transferFrontendRoutePermission(item)
   })
 }
 
 /**
- * 转换菜单权限路由为后端格式
+ * 转换菜单权限路由对象为后端权限对象
+ * @param item
+ * @returns {{path: (*|string), permission_type: (rules.permission_type|{trigger, message, required}|number), name: *, description: *}}
+ */
+export function transferFrontendRoutePermission(item) {
+  return {
+    'path': item.absolute_path,
+    'name': item.name,
+    'description': item.title,
+    'permission_type': item.permission_type || item.meta.permission_type || PERMISSION_TYPE.MENU,
+    'parent_id': item.parent_id,
+    'source': item
+  }
+}
+
+/**
+ * 转换后端权限路由对象为前端对象
+ * @param item
+ * @returns {{path: (*|string), permission_type: (rules.permission_type|{trigger, message, required}|number), name: *, description: *}}
+ */
+export function transferBackendRoutePermission(item) {
+  return {
+    'id': item.id,
+    'path': `${item.method}:${item.path}`,
+    'name': item.name,
+    'title': item.description,
+    'permission_type': item.permission_type || PERMISSION_TYPE.API,
+    'parent_id': item.parent_id,
+    'source': item
+  }
+}
+
+/**
+ * 递归转换菜单权限路由为前端树状格式
  * @param {array} menuList 前端路由列表
  * @param {int} parent_id 父节点ID
  * @returns {{path: (*|string), name: *, description: *, permission_type: number}[]}
  */
-export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
+export function transferBackRoutePermissionListToTree(menuList, parent_id = 0) {
   return menuList
     .filter(item => parseInt(item.parent_id) === parent_id && PERMISSION_TYPE.isApi(item.permission_type))
     .map((item) => {
-      return {
-        'id': item.id,
-        'path': `${item.method}:${item.path}`,
-        'name': item.name,
-        'title': item.description,
-        'permission_type': item.permission_type || PERMISSION_TYPE.API,
-        'parent_id': item.parent_id,
-        'children': transferBackRoutePermissionToTree(menuList, item.id),
-        'source': item
-      }
+      const tmp = transferBackendRoutePermission(item)
+
+      return Object.assign({
+        children: transferBackRoutePermissionListToTree(menuList, item.id)
+      }, tmp)
     })
 }
 
