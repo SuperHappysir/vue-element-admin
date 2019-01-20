@@ -27,16 +27,38 @@
           <span class="mgl-10">
             {{ data.title }}
             <el-tooltip content="菜:指代菜单权限,钮:指代按钮权限,接指代API接口权限" placement="top">
-              <el-tag v-if="data.permission_type === 2" class="mgl-10" type="success" size="mini">菜</el-tag>
-              <el-tag v-else-if="data.permission_type === 3" class="mgl-10" type="success" size="mini">钮</el-tag>
-              <el-tag v-else-if="data.permission_type === 1" class="mgl-10" type="success" size="mini">接</el-tag>
+              <el-tag
+                v-if="data.permission_type === 2"
+                class="mgl-10"
+                type="success"
+                size="mini">菜</el-tag>
+              <el-tag
+                v-else-if="data.permission_type === 3"
+                class="mgl-10"
+                type="success"
+                size="mini">钮</el-tag>
+              <el-tag
+                v-else-if="data.permission_type === 1"
+                class="mgl-10"
+                type="success"
+                size="mini">接</el-tag>
             </el-tooltip>
             <el-tooltip content="权限还未同步到后端服务器" placement="top">
-              <el-tag v-if="data.permission_type !== 1 && syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
+              <el-tag
+                v-if="data.permission_type !== 1 && syncMenu.indexOf(data.absolute_path) === -1"
+                class="mgl-10"
+                type="danger"
+                size="mini">!</el-tag>
             </el-tooltip>
           </span>
           <span class="mgl-10">
-            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click.stop="showdialog(node)"/>
+            <el-button
+              v-if="data.permission_type === 1"
+              class="edit-btn"
+              type="text"
+              size="mini"
+              icon="el-icon-edit"
+              @click.stop="showdialog(node)"/>
           </span>
         </span>
       </el-tree>
