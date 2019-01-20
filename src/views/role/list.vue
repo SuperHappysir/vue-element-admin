@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <sticky class-name="box-card">
-          <el-tooltip class="item" effect="dark" content="添加角色" placement="top-start" >
+          <el-tooltip v-if="hasPermission('/role/add-button')" class="item" effect="dark" content="添加角色" placement="top-start" >
             <el-button class="filter-item" icon="el-icon-plus" size="mini" @click="handleCreate"/>
           </el-tooltip>
           <el-popover
@@ -125,6 +125,7 @@ import waves from '@/directive/waves' // 水波纹指令
 import Sticky from '@/components/Sticky'
 import clipboard from '@/directive/clipboard/index'
 import PermissionTree from '@/views/permission/components/tree'
+import { hasPermission } from '@/utils/permission'
 
 export default {
   name: 'RoleList',
@@ -183,6 +184,7 @@ export default {
     this.getList()
   },
   methods: {
+    hasPermission,
     handleRowClick(row, event, column) {
       this.$refs.roleListTable.toggleRowSelection(row)
       console.log(row, event, column)

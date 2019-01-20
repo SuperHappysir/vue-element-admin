@@ -29,13 +29,7 @@ const user = {
   actions: {
     setUserPermission({ commit }, permission) {
       return new Promise(resolve => {
-        commit('SET_USER_PERMISSION', permission.filter(item => {
-          return !!item
-          // 排除不是菜单的权限
-          // return !!item &&
-          //   (parseInt(item.permission_type) !== PERMISSION_TYPE.MENU ||
-          //     (item.meta && parseInt(item.meta.permission_type) !== PERMISSION_TYPE.MENU))
-        }))
+        commit('SET_USER_PERMISSION', permission)
         resolve(permission)
       })
     },

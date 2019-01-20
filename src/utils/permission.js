@@ -44,8 +44,7 @@ export function transferFrontendRoutePermission(item) {
     'name': item.name,
     'description': item.title,
     'permission_type': item.permission_type || item.meta.permission_type || PERMISSION_TYPE.MENU,
-    'parent_id': item.parent_id,
-    'source': item
+    'parent_id': item.parent_id
   }
 }
 
@@ -103,6 +102,7 @@ export async function initializePermission(userid) {
 
 // 判断是否有访问权限
 export function hasPermission(toPath) {
+  console.log(store.getters.permission_path, toPath)
   return store.getters.permission_path.indexOf(toPath) >= 0
 }
 

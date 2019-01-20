@@ -21,9 +21,9 @@ const roleRouter = {
       meta: { title: 'roleList', icon: 'list', permission_type: PERMISSION_TYPE.MENU }
     },
     {
-      path: 'add.button',
-      name: 'add.button',
-      meta: { title: 'add.button', icon: 'list', permission_type: PERMISSION_TYPE.BUTTON }
+      path: 'add-button',
+      name: 'add-button',
+      meta: { title: 'add-button', icon: 'list', permission_type: PERMISSION_TYPE.BUTTON }
     }
   ]
 }

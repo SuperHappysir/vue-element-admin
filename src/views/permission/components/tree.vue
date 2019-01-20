@@ -198,11 +198,11 @@ export default {
         'children': this.getChildren(
           allPermissionArr,
           0
-        )
+        ).filter(item => {
+          return item.path !== '*' || item.alwaysShow
+        })
       }]
-      this.menuTree = this.allMenuTree.filter(item => {
-        return item.path !== '*' || item.alwaysShow
-      })
+      this.menuTree = this.allMenuTree
     },
     getChildren(allPermissionArr, parentId = 0) {
       return allPermissionArr.filter(item => parseInt(item.parent_id) === parentId).map(item => {
@@ -220,13 +220,13 @@ export default {
     computedAsyncRouterId(asyncRouterArr, parentNode = { 'path': '/' }) {
       return asyncRouterArr.map(item => {
         // 绝对路径
-        const absolutePath = !this.isApi(item.permission_type) ? path.join('/', parentNode.path, item.path) : item.path
+        item.absolutePath = !this.isApi(item.permission_type) ? path.join('/', parentNode.path, item.path) : item.path
         // 权限ID
         item.id = item.id ||
-          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
+          (this.permissionPath2ObjectMap[item.absolutePath] ? this.permissionPath2ObjectMap[item.absolutePath].id : 0)
         // 父节点ID
         const parent_id = item.parent_id ||
-          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].parent_id : 0)
+          (this.permissionPath2ObjectMap[parentNode.absolutePath] ? this.permissionPath2ObjectMap[parentNode.absolutePath].id : 0)
         // 权限title
         const title = item.title || (item.meta && item.meta.title ? item.meta.title : '')
         // 子节点数组
@@ -238,9 +238,9 @@ export default {
           'id': item.id,
           'path': item.path,
           'children': item.children,
-          'absolute_path': absolutePath,
+          'absolute_path': item.absolutePath,
           'parent_id': parent_id,
-          'permission_type': item.permission_type || PERMISSION_TYPE.MENU,
+          'permission_type': item.permission_type || item.meta && item.meta.permission_type || PERMISSION_TYPE.MENU,
           'name': typeof item.name !== undefined ? item.name : '',
           'title': title ? this.generateTitle(title) : title,
           'source': item.source || {}
