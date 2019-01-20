@@ -1,7 +1,11 @@
 import request from '@/utils/request'
 
-export function SyncMenuPermissionData(params) {
+export function syncMenuPermissionData(params) {
   return request.post('/api/permission/frontend/path', params)
+}
+
+export function generateBackendPremission() {
+  return request.post('/api/system/sync-route')
 }
 
 export function getMenuPermissionData(params) {

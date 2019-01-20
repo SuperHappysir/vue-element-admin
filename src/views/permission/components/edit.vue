@@ -103,11 +103,11 @@ export default {
         return this.dialogVisible
       },
       set(newVal) {
+        if (!newVal) {
+          this.$emit('updateSuccess')
+        }
         this.$emit('update:dialogVisible', newVal)
       }
-    },
-    permissionData() {
-      return this.transformKeyValue(this.permssionTree)
     }
   },
   methods: {
@@ -120,37 +120,18 @@ export default {
           path: this.currentNode.data.source.path,
           method: this.currentNode.data.source.method,
           permission_type: this.currentNode.data.source.permission_type
-        }).then((response) => {
-          this.$message({
-            message: '权限分配成功',
+        }).then(() => {
+          this.$confirm('需要关闭编辑框并刷新列表么?', '权限更新成功', {
             type: 'success'
-          })
-          return response
-        }).then((response) => {
-          this.$emit('updateSuccess', response)
+          }).then(() => {
+            this.visible = !this.visible
+            this.$emit('updateSuccess')
+          }).catch(() => {})
         })
       })
     },
     handleParentIdChange(object) {
       this.temp.parent_id = object.id
-    },
-    // 转换权限数据为tree树格式
-    transformKeyValue(permissionArr) {
-      if (!permissionArr) {
-        return []
-      }
-      return permissionArr.map(item => {
-        const object = {
-          id: item.id,
-          label: item.title
-        }
-
-        const children = this.transformKeyValue(item.children)
-        if (children.length > 0) {
-          object.children = children
-        }
-        return object
-      })
     }
   }
 }
