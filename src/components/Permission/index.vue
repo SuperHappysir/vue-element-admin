@@ -48,7 +48,7 @@
 
 <script>
 import { generateTitle } from '@/utils/i18n'
-import { asyncRouterMap } from '@/router'
+import { asyncRouterArr } from '@/router'
 import { syncMenuPermissionData, getMenuPermissionData, assignRolePermissions, deletePermission } from '@/api/rbac'
 import { initializePermission, transferBackRoutePermissionToTree } from '@/utils/permission'
 import path from 'path'
@@ -160,7 +160,7 @@ export default {
         'name': '根对象',
         'title': '根对象',
         'permission_type': 2,
-        'children': this.getChildren(asyncRouterMap.concat(transferBackRoutePermissionToTree(this.permission)), { 'path': '/' }).filter(item => {
+        'children': this.getChildren(asyncRouterArr.concat(transferBackRoutePermissionToTree(this.permission)), { 'path': '/' }).filter(item => {
           return item.path !== '*' || item.alwaysShow
         })
       }]

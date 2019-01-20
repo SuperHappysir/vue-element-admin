@@ -22,3 +22,12 @@ export const DELETE_STATE = {
   }
 }
 
+export const CommonMixin = {
+  methods: {
+    isNORMAL: DELETE_STATE.isNORMAL,
+    isDeleted: DELETE_STATE.isDeleted,
+    isTrue: BOOL_STATE.isTrue,
+    isFalse: BOOL_STATE.isFalse
+  }
+}
+

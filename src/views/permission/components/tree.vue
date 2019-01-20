@@ -26,16 +26,38 @@
           <span class="mgl-10">
             {{ data.title }}
             <el-tooltip content="菜:指代菜单权限,钮:指代按钮权限,接指代API接口权限" placement="top">
-              <el-tag v-if="isMenu(data.permission_type)" class="mgl-10" type="success" size="mini">菜</el-tag>
-              <el-tag v-else-if="isButton(data.permission_type)" class="mgl-10" type="success" size="mini">钮</el-tag>
-              <el-tag v-else-if="isApi(data.permission_type)" class="mgl-10" type="success" size="mini">接</el-tag>
+              <el-tag
+                v-if="isMenu(data.permission_type)"
+                class="mgl-10"
+                type="success"
+                size="mini">菜</el-tag>
+              <el-tag
+                v-else-if="isButton(data.permission_type)"
+                class="mgl-10"
+                type="success"
+                size="mini">钮</el-tag>
+              <el-tag
+                v-else-if="isApi(data.permission_type)"
+                class="mgl-10"
+                type="success"
+                size="mini">接</el-tag>
             </el-tooltip>
             <el-tooltip content="权限还未同步到后端服务器" placement="top">
-              <el-tag v-if="!isApi(data.permission_type) && syncMenu.indexOf(data.absolute_path) === -1" class="mgl-10" type="danger" size="mini">!</el-tag>
+              <el-tag
+                v-if="!isApi(data.permission_type) && syncMenu.indexOf(data.absolute_path) === -1"
+                class="mgl-10"
+                type="danger"
+                size="mini">!</el-tag>
             </el-tooltip>
           </span>
           <span class="mgl-10">
-            <el-button v-if="data.permission_type === 1" class="edit-btn" type="text" size="mini" icon="el-icon-edit" @click.stop="showdialog(node)"/>
+            <el-button
+              v-if="data.permission_type === 1"
+              class="edit-btn"
+              type="text"
+              size="mini"
+              icon="el-icon-edit"
+              @click.stop="showdialog(node)"/>
           </span>
         </span>
       </el-tree>
@@ -51,7 +73,7 @@
 
 <script>
 import { generateTitle } from '@/utils/i18n'
-import { asyncRouterMap } from '@/router'
+import { asyncRouterArr } from '@/router'
 import {
   assignRolePermissions, generateBackendPremission, getMenuPermissionData, getRolePermissions, syncMenuPermissionData
 } from '@/api/rbac'
@@ -61,7 +83,8 @@ import {
 import path from 'path'
 import debounce from 'lodash.debounce'
 import permissionEdit from './edit'
-import { PermissionMixin } from '@/constant/permission'
+import { PERMISSION_TYPE, PermissionMixin } from '@/constant/permission'
+import { deepClone } from '@/utils'
 
 export default {
   name: 'Tree',
@@ -169,21 +192,20 @@ export default {
         'permission_type': 2,
         'parent_id': 0,
         'children': this.getChildren(
-          asyncRouterMap.concat(transferBackRoutePermissionToTree(this.permissionSource)),
-          { 'path': '/' }
+          this.computedAsyncRouterId(asyncRouterArr).concat(transferBackRoutePermissionToTree(this.permissionSource))
         )
       }]
       this.menuTree = this.allMenuTree.filter(item => {
         return item.path !== '*' || item.alwaysShow
       })
     },
-    getChildren(childrens, parentNode) {
+    getChildren(childrens, parentNode = { 'path': '/' }) {
       if (!childrens) {
         return []
       }
 
       return childrens.map((childenItem) => {
-        const absolutePath = childenItem.permission_type !== 1 ? path.join('/', parentNode.path, childenItem.path) : childenItem.path
+        const absolutePath = !this.isApi(childenItem.permission_type) ? path.join('/', parentNode.path, childenItem.path) : childenItem.path
         const id = childenItem.id ||
           (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
         if (!id) {
@@ -199,7 +221,7 @@ export default {
           'path': childenItem.path,
           'absolute_path': absolutePath,
           'parent_id': parent_id,
-          'permission_type': childenItem.permission_type || 2,
+          'permission_type': childenItem.permission_type || PERMISSION_TYPE.MENU,
           'name': typeof childenItem.name !== undefined ? childenItem.name : '',
           'title': title ? this.generateTitle(title) : title,
           'source': childenItem.source || {}
@@ -213,7 +235,20 @@ export default {
         return newChilden
       }).filter(item => !!item)
     },
+    // 生成vue路由的ID
+    computedAsyncRouterId(asyncRouterArr, parentNode = { 'path': '/' }) {
+      return asyncRouterArr.map(item => {
+        const absolutePath = !this.isApi(item.permission_type) ? path.join('/', parentNode.path, item.path) : item.path
+        item.id = item.id ||
+          (this.permissionPath2ObjectMap[absolutePath] ? this.permissionPath2ObjectMap[absolutePath].id : 0)
+        item.children = item.children || []
+        if (item.children.length > 0) {
+          item.children = this.computedAsyncRouterId(item.children, deepClone(item))
+        }
 
+        return item
+      })
+    },
     // 同步路由到后端
     async syncMenuPermissionData() {
       // 将前端权限钻换成后端对应的格式

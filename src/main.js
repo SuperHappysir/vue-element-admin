@@ -21,6 +21,7 @@ import './errorLog'
 import * as filters from './filters'
 // 权限控制
 import './permission'
+import { CommonMixin } from '@/constant/common'
 
 // 模拟API
 // import './mock'
@@ -48,6 +49,7 @@ const app = new Vue({
   router,
   store,
   i18n,
+  mixins: [CommonMixin],
   render: h => h(App)
 })
 

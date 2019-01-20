@@ -1,6 +1,6 @@
 import store from '@/store'
 import { getUserPermissions } from '@/api/rbac'
-import { asyncRouterMap, constantRouterMap } from '@/router'
+import { asyncRouterArr, constantRouterMap } from '@/router'
 import path from 'path'
 import { PERMISSION_TYPE } from '@/constant/permission'
 
@@ -29,7 +29,6 @@ export function permissionTreeToList(tree) {
  */
 export function transferRoutePermission(menuList) {
   return menuList.map((item) => {
-    console.log(item)
     return {
       'path': item.absolute_path,
       'name': item.name,
@@ -54,7 +53,7 @@ export function transferBackRoutePermissionToTree(menuList, parent_id = 0) {
         'path': `${item.method}:${item.path}`,
         'name': item.name,
         'title': item.description,
-        'permission_type': PERMISSION_TYPE.API,
+        'permission_type': item.permission_type || PERMISSION_TYPE.API,
         'parent_id': item.parent_id,
         'children': transferBackRoutePermissionToTree(menuList, item.id),
         'source': item
@@ -74,7 +73,7 @@ export async function initializePermission(userid) {
 
   // 初始化用戶可見的menu
   permissionList = store.getters.permission_path
-  const addRouters = markNoAuthRouter(asyncRouterMap, permissionList)
+  const addRouters = markNoAuthRouter(asyncRouterArr, permissionList)
 
   return store.dispatch('GenerateRoutes', addRouters)
 }
