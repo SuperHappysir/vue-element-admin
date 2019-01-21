@@ -23,7 +23,8 @@ const roleRouter = {
     {
       path: 'add-button',
       name: 'add-button',
-      meta: { title: 'add-button', icon: 'list', permission_type: PERMISSION_TYPE.BUTTON }
+      meta: { title: 'add-button', icon: 'list', permission_type: PERMISSION_TYPE.BUTTON },
+      hidden: true
     }
   ]
 }

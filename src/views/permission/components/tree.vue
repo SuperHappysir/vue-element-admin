@@ -67,6 +67,7 @@
       :current-node="dialog.node"
       :dialog-visible.sync="dialog.visible"
       :permssion-tree="menuTree"
+      class="permission-edit"
       @updateSuccess="init"/>
   </div>
 </template>
@@ -301,16 +302,20 @@ export default {
 </script>
 
 <style scoped>
-    .custom-tree-node {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 14px;
-        padding-right: 8px;
-    }
+  .custom-tree-node {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      padding-right: 8px;
+  }
 
-    .mgb-15 {
-        margin-bottom: 15px;
-    }
+  .mgb-15 {
+      margin-bottom: 15px;
+  }
+
+  .permission-edit {
+    z-index: 2029;
+  }
 </style>
