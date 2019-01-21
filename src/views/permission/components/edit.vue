@@ -38,7 +38,8 @@
 <script>
 import '@/components/SelectTree'
 import SelectTree from '@/components/SelectTree/index'
-import { updatePermission } from '@/api/rbac'
+import { getPermission, updatePermission } from '@/api/rbac'
+import { PermissionMixin } from '@/constant/permission'
 
 const permType = {
   MENU: { code: 2, name: '菜单', type: 'MENU' },
@@ -54,6 +55,7 @@ const constDialogType = {
 export default {
   name: 'Edit',
   components: { SelectTree },
+  mixins: [PermissionMixin],
   props: {
     currentNode: {
       type: Object,
@@ -112,22 +114,31 @@ export default {
   },
   methods: {
     update() {
-      this.$refs['dataForm'].validate((valid) => {
+      this.$refs['dataForm'].validate(async(valid) => {
         if (!valid) return
-        const data = Object.assign({}, this.temp)// copy obj
-        updatePermission(this.currentNode.data.id, {
+        const data = Object.assign({}, this.temp)
+
+        if (data.parent_id > 0) {
+          const resp = await getPermission(data.parent_id)
+          if (!this.isMenu(resp.data.payload.permission_type)) {
+            this.$alert('仅支持菜单节点作为api接口节点上级')
+            return
+          }
+        }
+
+        await updatePermission(this.currentNode.data.id, {
           parent_id: data.parent_id > 0 ? data.parent_id : 0,
           path: this.currentNode.data.source.path,
           method: this.currentNode.data.source.method,
           permission_type: this.currentNode.data.source.permission_type
-        }).then(() => {
-          this.$confirm('需要关闭编辑框并刷新列表么?', '权限更新成功', {
-            type: 'success'
-          }).then(() => {
-            this.visible = !this.visible
-            this.$emit('updateSuccess')
-          }).catch(() => {})
         })
+
+        await this.$confirm('需要关闭编辑框并刷新列表么?', '权限更新成功', {
+          type: 'success'
+        })
+
+        this.visible = !this.visible
+        this.$emit('updateSuccess')
       })
     },
     handleParentIdChange(object) {
