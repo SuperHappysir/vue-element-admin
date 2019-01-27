@@ -16,11 +16,10 @@
 import BackToTop from '@/components/BackToTop'
 import Permission from '@/components/Permission'
 import PermissionTree from './components/tree'
-import PermissionGroup from './components/permissionGroup'
 
 export default{
   name: 'PermissionList',
-  components: { BackToTop, Permission, PermissionTree, PermissionGroup },
+  components: { BackToTop, Permission, PermissionTree },
   props: {
     roleId: {
       type: Number,

@@ -102,7 +102,6 @@ export async function initializePermission(userid) {
 
 // 判断是否有访问权限
 export function hasPermission(toPath) {
-  console.log(store.getters.permission_path, toPath)
   return store.getters.permission_path.indexOf(toPath) >= 0
 }
 

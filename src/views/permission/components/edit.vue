@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="visible" :modal="false" title="更新权限" width="30%">
+  <el-dialog :visible.sync="visible" :append-to-body="true" title="更新权限" width="30%">
     <el-form ref="dataForm" :rules="rules" :model="temp" label-position="top">
       <el-form-item label="父级权限值" prop="parent_id">
         <select-tree
@@ -105,9 +105,9 @@ export default {
         return this.dialogVisible
       },
       set(newVal) {
-        if (!newVal) {
-          this.$emit('updateSuccess')
-        }
+        // if (!newVal) {
+        //   this.$emit('updateSuccess')
+        // }
         this.$emit('update:dialogVisible', newVal)
       }
     }
