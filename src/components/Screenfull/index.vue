@@ -1,6 +1,6 @@
 <template>
   <div>
-    <svg-icon class-name="screenfull-icon" icon-class="screenfull" />
+    <svg-icon :icon-class="isFullscreen?'exit-fullscreen':'fullscreen'" @click="click" />
   </div>
 </template>
 
@@ -14,6 +14,12 @@ export default {
       isFullscreen: false
     }
   },
+  mounted() {
+    this.init()
+  },
+  beforeDestroy() {
+    this.destroy()
+  },
   methods: {
     click() {
       if (!screenfull.enabled) {
@@ -24,6 +30,19 @@ export default {
         return false
       }
       screenfull.toggle()
+    },
+    change() {
+      this.isFullscreen = screenfull.isFullscreen
+    },
+    init() {
+      if (screenfull.enabled) {
+        screenfull.on('change', this.change)
+      }
+    },
+    destroy() {
+      if (screenfull.enabled) {
+        screenfull.off('change', this.change)
+      }
     }
   }
 }
